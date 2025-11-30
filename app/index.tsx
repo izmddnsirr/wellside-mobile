@@ -6,30 +6,35 @@ import { ActivityIndicator, Text, View } from "react-native";
 export default function SplashScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Buat masa ni terus pergi ke tabs
       router.replace("/(auth)/login");
-      // Kalau nanti nak check login:
-      // kalau tak login -> router.replace("/(auth)/login");
     }, 1500);
 
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <View
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 12,
-      }}
-    >
-      <StatusBar style="auto" />
+    <View className="flex-1 items-center justify-center bg-black">
+      <StatusBar style="light" />
 
-      <Text style={{ fontSize: 30, fontWeight: "bold", paddingBottom: 50 }}>
+      {/* Logo ring */}
+      <View className="w-20 h-20 rounded-full border border-neutral-700 items-center justify-center mb-6">
+        <Text className="text-2xl font-semibold text-white">WS</Text>
+      </View>
+
+      {/* Brand name */}
+      <Text className="text-3xl font-extrabold tracking-[0.3em] text-white">
         WELLSIDE
       </Text>
-      <ActivityIndicator size="large" />
+
+      {/* Tagline */}
+      <Text className="mt-2 text-sm text-neutral-300">
+        Barbershop & Grooming Studio
+      </Text>
+
+      {/* Loader */}
+      <View className="mt-10">
+        <ActivityIndicator size="large" color="#ffffff" />
+      </View>
     </View>
   );
 }
