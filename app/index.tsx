@@ -7,7 +7,7 @@ export default function SplashScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
       router.replace("/(auth)/login");
-    }, 1500);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -16,24 +16,20 @@ export default function SplashScreen() {
     <View className="flex-1 items-center justify-center bg-white">
       <StatusBar style="auto" />
 
-      {/* Logo ring */}
-      <View className="w-20 h-20 rounded-full border-2 border-neutral-700 items-center justify-center">
-        <Text className="text-2xl font-extrabold tracking-widest">WS</Text>
-      </View>
+      {/* Brand name */}
+      <Text className="text-5xl font-extrabold tracking-tighter">
+        W E L L S I D E
+      </Text>
 
       {/* Brand name */}
-      {/* <Text className="text-3xl font-extrabold tracking-widest text-white">
-        WELLSIDE
-      </Text> */}
-
-      {/* Tagline */}
-      {/* <Text className="mt-2 text-sm text-neutral-300">
-        Barbershop & Grooming Studio
-      </Text> */}
+      <Text className="text-xl font-bold tracking-widest text-neutral-500">
+        BARBERSHOP
+      </Text>
 
       {/* Loader at the bottom */}
       <View className="absolute bottom-20 left-0 right-0 items-center">
-        <ActivityIndicator size="small" color="#000000" />
+        <Text className="pb-6 text-neutral-500">Preparing your chair</Text>
+        <ActivityIndicator className="" size="small" color="#000000" />
       </View>
     </View>
   );
