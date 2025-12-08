@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Image, Text, View } from "react-native";
 
 export default function SplashScreen() {
   useEffect(() => {
@@ -13,18 +13,17 @@ export default function SplashScreen() {
   }, []);
 
   return (
-    <View className="flex-1 items-center justify-center bg-white">
+    <View className="flex-1 items-center justify-center bg-gray-100">
       <StatusBar style="auto" />
 
-      {/* Brand name */}
-      <Text className="text-5xl font-extrabold tracking-tighter">
-        W E L L S I D E
-      </Text>
-
-      {/* Brand name */}
-      <Text className="text-xl font-bold tracking-widest text-neutral-500">
-        BARBERSHOP
-      </Text>
+      <Image
+        source={require("../assets/images/wellside-logo.png")}
+        style={{
+          width: 240,
+          height: 78,
+        }}
+        resizeMode="contain"
+      />
 
       {/* Loader at the bottom */}
       <View className="absolute bottom-20 left-0 right-0 items-center">
