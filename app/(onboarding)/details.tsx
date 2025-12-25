@@ -12,33 +12,36 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useOnboarding } from "../../context/OnboardingContext";
 
-export default function RegisterScreen() {
+export default function DetailsScreen() {
   const router = useRouter();
-  
-  const { email, password, setEmail, setPassword } = useOnboarding();
-  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const {
+    firstName,
+    lastName,
+    phone,
+    setFirstName,
+    setLastName,
+    setPhone,
+    reset,
+  } = useOnboarding();
   const [errorMessage, setErrorMessage] = useState("");
 
   const onRegister = () => {
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) {
-      setErrorMessage("Email is required.");
+    if (!firstName.trim()) {
+      setErrorMessage("First name is required.");
       return;
     }
-    if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
-      setErrorMessage("Please enter a valid email.");
+    if (!lastName.trim()) {
+      setErrorMessage("Last name is required.");
       return;
     }
-    if (password.length < 6) {
-      setErrorMessage("Password must be at least 6 characters.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setErrorMessage("Passwords do not match.");
+    if (phone.trim().length < 8) {
+      setErrorMessage("Please enter a valid phone number.");
       return;
     }
     setErrorMessage("");
-    router.push("/(onboarding)/details");
+    reset();
+    router.replace("/(tabs)");
   };
 
   return (
@@ -68,43 +71,41 @@ export default function RegisterScreen() {
               <Text className="mb-6 text-gray-600">Your personal barber.</Text>
             </View>
 
-            {/* EMAIL */}
+            {/* FULL NAME */}
             <Text className="text-sm font-semibold text-gray-700 mb-3 tracking-widest">
-              EMAIL
+              FIRST NAME
             </Text>
             <TextInput
               className="bg-slate-50 border border-gray-300 rounded-xl p-5 text-base leading-5 mb-6"
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={(value) => setEmail(value)}
+              placeholder="Enter your first name"
+              autoCapitalize="words"
+              value={firstName}
+              onChangeText={(value) => setFirstName(value)}
             />
 
-            {/* PASSWORD */}
+            {/* FULL NAME */}
             <Text className="text-sm font-semibold text-gray-700 mb-3 tracking-widest">
-              PASSWORD
+              LAST NAME
             </Text>
             <TextInput
               className="bg-slate-50 border border-gray-300 rounded-xl p-5 text-base leading-5 mb-6"
-              placeholder="Enter your password"
-              secureTextEntry
-              autoCapitalize="none"
-              value={password}
-              onChangeText={(value) => setPassword(value)}
+              placeholder="Enter your last name"
+              autoCapitalize="words"
+              value={lastName}
+              onChangeText={(value) => setLastName(value)}
             />
 
-            {/* CONFIRM PASSWORD */}
+            {/* PHONE NUMBER */}
             <Text className="text-sm font-semibold text-gray-700 mb-3 tracking-widest">
-              CONFIRM PASSWORD
+              PHONE NUMBER
             </Text>
             <TextInput
               className="bg-slate-50 border border-gray-300 rounded-xl p-5 text-base leading-5 mb-6"
-              placeholder="Confirm your password"
-              secureTextEntry
+              placeholder="Enter your phone number"
+              keyboardType="phone-pad"
               autoCapitalize="none"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              value={phone}
+              onChangeText={(value) => setPhone(value)}
             />
 
             {errorMessage ? (
@@ -117,7 +118,7 @@ export default function RegisterScreen() {
               className="bg-black p-4 mt-2 rounded-full active:opacity-80 mb-6"
             >
               <Text className="text-center text-white font-semibold text-lg">
-                Next
+                Register
               </Text>
             </Pressable>
 

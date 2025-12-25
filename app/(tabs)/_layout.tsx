@@ -8,6 +8,7 @@ export default function TabLayout() {
   const labelColor = colorScheme === "dark" ? "white" : "black";
   const iconTintColor = labelColor;
 
+
   if (Platform.OS === "android") {
     return (
       <Tabs
@@ -66,6 +67,7 @@ export default function TabLayout() {
   }
 
   return (
+
     <NativeTabs
       labelStyle={{
         color: labelColor,
@@ -82,6 +84,12 @@ export default function TabLayout() {
       <NativeTabs.Trigger name="appointment">
         <Icon sf={{ default: "calendar", selected: "calendar" }} />
         <Label>Appointment</Label>
+      </NativeTabs.Trigger>
+
+      {/* AI */}
+      <NativeTabs.Trigger name="ai" >
+        <Icon sf={{ default: "ellipsis.bubble.fill", selected: "ellipsis.bubble.fill" }} />
+        <Label>AI</Label>
       </NativeTabs.Trigger>
 
       {/* Notification */}

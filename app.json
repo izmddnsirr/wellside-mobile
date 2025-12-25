@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "wellside-project",
-    "slug": "wellside-project",
+    "name": "wellside-mobile",
+    "slug": "wellside-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "wellsideproject",
+    "scheme": "wellsidemobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
