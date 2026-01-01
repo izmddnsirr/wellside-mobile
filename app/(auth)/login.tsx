@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -10,12 +11,53 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { supabase } from "../../utils/supabase";
 
 export default function LoginScreen() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const onLogin = async () => {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      const message = "Email is required.";
+      setErrorMessage(message);
+      Alert.alert("Check your details", message);
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
+      const message = "Please enter a valid email.";
+      setErrorMessage(message);
+      Alert.alert("Check your details", message);
+      return;
+    }
+    if (!password) {
+      const message = "Password is required.";
+      setErrorMessage(message);
+      Alert.alert("Check your details", message);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage("");
+    const { error } = await supabase.auth.signInWithPassword({
+      email: trimmedEmail,
+      password,
+    });
+    setIsSubmitting(false);
+
+    if (error) {
+      setErrorMessage(error.message);
+      Alert.alert("Sign-in failed", error.message);
+      return;
+    }
+
+    router.replace("/(tabs)");
+  };
 
   return (
     <SafeAreaView className="flex-1 px-5 bg-slate-100">
@@ -70,13 +112,20 @@ export default function LoginScreen() {
               onChangeText={setPassword}
             />
 
+            {errorMessage ? (
+              <Text className="text-sm text-red-600 mb-4">{errorMessage}</Text>
+            ) : null}
+
             {/* Login Button */}
             <Pressable
-              onPress={() => router.replace("/(tabs)")}
-              className="bg-black p-4 mt-2 rounded-full active:opacity-80 mb-6"
+              onPress={onLogin}
+              disabled={isSubmitting}
+              className={`bg-black p-4 mt-2 rounded-full active:opacity-80 mb-6 ${
+                isSubmitting ? "opacity-60" : ""
+              }`}
             >
               <Text className="text-center text-white font-semibold text-lg">
-                Login
+                {isSubmitting ? "Signing in..." : "Login"}
               </Text>
             </Pressable>
           </View>

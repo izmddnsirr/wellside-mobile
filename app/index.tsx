@@ -1,15 +1,35 @@
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Text, View } from "react-native";
+import { supabase } from "../utils/supabase";
 
 export default function SplashScreen() {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      router.replace("/(auth)/start");
-    }, 2000);
+  const [isChecking, setIsChecking] = useState(true);
 
-    return () => clearTimeout(timer);
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!isMounted) {
+        return;
+      }
+      const nextRoute = data.session ? "/(tabs)" : "/(auth)/start";
+      setTimeout(() => {
+        if (!isMounted) {
+          return;
+        }
+        router.replace(nextRoute);
+        setIsChecking(false);
+      }, 1200);
+    };
+
+    checkSession();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
@@ -27,8 +47,10 @@ export default function SplashScreen() {
 
       {/* Loader at the bottom */}
       <View className="absolute bottom-20 left-0 right-0 items-center">
-        <Text className="pb-6 text-neutral-500">Preparing your chair</Text>
-        <ActivityIndicator className="" size="small" color="#000000" />
+        <Text className="pb-6 text-neutral-500">
+          {isChecking ? "Preparing your chair" : "Redirecting"}
+        </Text>
+        <ActivityIndicator size="small" color="#000000" />
       </View>
     </View>
   );

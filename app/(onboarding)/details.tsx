@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -11,11 +12,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useOnboarding } from "../../context/OnboardingContext";
+import { supabase } from "../../utils/supabase";
 
 export default function DetailsScreen() {
   const router = useRouter();
 
   const {
+    email,
+    password,
     firstName,
     lastName,
     phone,
@@ -25,22 +29,68 @@ export default function DetailsScreen() {
     reset,
   } = useOnboarding();
   const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const onRegister = () => {
+  const onRegister = async () => {
+    if (!email.trim() || !password) {
+      const message = "Please complete your account details first.";
+      setErrorMessage(message);
+      Alert.alert("Check your details", message);
+      return;
+    }
     if (!firstName.trim()) {
-      setErrorMessage("First name is required.");
+      const message = "First name is required.";
+      setErrorMessage(message);
+      Alert.alert("Check your details", message);
       return;
     }
     if (!lastName.trim()) {
-      setErrorMessage("Last name is required.");
+      const message = "Last name is required.";
+      setErrorMessage(message);
+      Alert.alert("Check your details", message);
       return;
     }
     if (phone.trim().length < 8) {
-      setErrorMessage("Please enter a valid phone number.");
+      const message = "Please enter a valid phone number.";
+      setErrorMessage(message);
+      Alert.alert("Check your details", message);
       return;
     }
+
+    setIsSubmitting(true);
     setErrorMessage("");
+
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        data: {
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          phone: phone.trim(),
+          role: "customer",
+        },
+      },
+    });
+
+    if (error) {
+      setIsSubmitting(false);
+      setErrorMessage(error.message);
+      Alert.alert("Sign-up failed", error.message);
+      return;
+    }
+
     reset();
+    setIsSubmitting(false);
+    if (!data.session) {
+      Alert.alert(
+        "Confirm your email",
+        "Check your inbox to confirm your email before signing in."
+      );
+      router.replace("/(auth)/login");
+      return;
+    }
+
     router.replace("/(tabs)");
   };
 
@@ -115,10 +165,13 @@ export default function DetailsScreen() {
             {/* Register Button */}
             <Pressable
               onPress={onRegister}
-              className="bg-black p-4 mt-2 rounded-full active:opacity-80 mb-6"
+              disabled={isSubmitting}
+              className={`bg-black p-4 mt-2 rounded-full active:opacity-80 mb-6 ${
+                isSubmitting ? "opacity-60" : ""
+              }`}
             >
               <Text className="text-center text-white font-semibold text-lg">
-                Register
+                {isSubmitting ? "Creating account..." : "Register"}
               </Text>
             </Pressable>
 

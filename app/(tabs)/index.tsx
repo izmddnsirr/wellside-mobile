@@ -1,57 +1,173 @@
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useCallback, useState } from "react";
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { supabase } from "../../utils/supabase";
+import { StatusBar } from "expo-status-bar";
+
+type Profile = {
+  first_name: string | null;
+};
 
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchName = useCallback(async () => {
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) {
+      setProfile(null);
+      return;
+    }
+
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("first_name")
+      .eq("id", authData.user.id)
+      .maybeSingle();
+
+    setProfile({
+      first_name: profileData?.first_name ?? null,
+    });
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+
+      const load = async () => {
+        setIsLoading(true);
+        await fetchName();
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      };
+
+      load();
+
+      return () => {
+        isMounted = false;
+      };
+    }, [fetchName])
+  );
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await fetchName();
+    setIsRefreshing(false);
+  }, [fetchName]);
+
   return (
-    <SafeAreaView className="flex-1 bg-slate-100">
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Greeting Section */}
-        <View className="mx-5 mt-6 flex-row justify-between items-center">
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+      <StatusBar style="dark" />
+      <View className="absolute -top-24 -right-16 h-56 w-56 rounded-full bg-[#E6E6E6]" />
+      <View className="absolute top-36 -left-24 h-72 w-72 rounded-full bg-[#F2F2F2]" />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        }
+        contentContainerStyle={{ paddingBottom: 32 }}
+      >
+        <View className="mx-6 mt-6 flex-row items-center justify-between">
           <View>
-            <Text className="text-sm text-gray-600">W E L L S I D E + </Text>
-            <Text className="text-3xl mt-1 font-semibold">
-              Hello, Izamuddin
+            <Text className="text-[11px] tracking-[4px] text-[#666666]">
+              WELLSIDE +
             </Text>
-            <Text className="text-gray-500 text-lg">
-              Ready for a fresh cut today?
+            <View className="flex-row items-center">
+              <Text className="text-3xl mt-1 font-semibold text-black">
+                Hi{profile?.first_name ? `, ${profile.first_name}` : ""}
+              </Text>
+              {isLoading ? (
+                <ActivityIndicator className="ml-3" size="small" />
+              ) : null}
+            </View>
+            <Text className="text-[#4D4D4D] text-base mt-1">
+              Clean lines. Calm day.
             </Text>
+          </View>
+          <View className="h-12 w-12 rounded-full bg-black items-center justify-center">
+            <Text className="text-white text-lg font-semibold">W</Text>
           </View>
         </View>
 
-        {/* Card */}
-        <View className="bg-slate-950 border mx-5 mt-7 rounded-3xl p-5">
-          <Text className="text-neutral-400 text-sm tracking-tighter">
-            T O D A Y
+        <View className="mx-6 mt-8 rounded-[32px] bg-black p-6 overflow-hidden">
+          <View className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white opacity-15" />
+          <Text className="text-[#BFBFBF] text-[11px] tracking-[3px]">
+            NEXT UP
           </Text>
-          <Text className="text-white text-3xl font-semibold mt-3">
-            Style without waiting.
+          <Text className="mt-3 text-3xl font-semibold text-white">
+            Friday
           </Text>
-          <Text className="text-neutral-400 mt-3 text-lg">
-            Book your appointment now and skip the queue
-          </Text>
-          <TouchableOpacity className="mt-6 bg-white py-3 px-8 rounded-full self-start border border-gray-400">
-            <Text className="font-semibold text-slate-900">Book Now</Text>
+          <Text className="text-lg text-[#E6E6E6]">3:30 PM · Seat 2</Text>
+          <TouchableOpacity className="mt-6 bg-white px-5 py-2.5 rounded-full self-start">
+            <Text className="font-semibold text-black">Manage visit</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Upcoming */}
-        <Text className="text-xl font-semibold mx-5 mt-7">Upcoming</Text>
-        <View className="mt-3 p-5 mx-5 border rounded-2xl border-gray-300 bg-gray-50 ">
-          <Text className="text-neutral-500 text-sm tracking-tighter">
-            A P P O I N T M E N T
-          </Text>
-          <Text className="mt-1 text-xl font-semibold">Friday, 3:30 PM</Text>
-          <Text className="mt-1">Fade + Beard with Arif</Text>
-          <View className="h-px bg-gray-300 my-4" />
-          <View className="flex-row justify-between">
-            <Text className="text-neutral-600">Notes: Keep neckline low</Text>
-            <Text className="font-semibold">RM35</Text>
-          </View>
+        <View className="mx-6 mt-6 flex-row justify-between">
+          <TouchableOpacity className="w-[31%] rounded-2xl bg-white border border-[#E0E0E0] p-4">
+            <Text className="text-[11px] tracking-[2px] text-[#666666]">
+              QUEUE
+            </Text>
+            <Text className="mt-2 text-lg font-semibold text-black">
+              12 min
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity className="w-[31%] rounded-2xl bg-white border border-[#E0E0E0] p-4">
+            <Text className="text-[11px] tracking-[2px] text-[#666666]">
+              POINTS
+            </Text>
+            <Text className="mt-2 text-lg font-semibold text-black">
+              240
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity className="w-[31%] rounded-2xl bg-white border border-[#E0E0E0] p-4">
+            <Text className="text-[11px] tracking-[2px] text-[#666666]">
+              WALK IN
+            </Text>
+            <Text className="mt-2 text-lg font-semibold text-black">
+              2 left
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {/*  */}
-        <Text className="text-xl font-semibold mx-5 mt-7">Services</Text>
+        <Text className="mx-6 mt-8 text-[11px] tracking-[4px] text-[#666666]">
+          GALLERY
+        </Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="mt-4"
+          contentContainerStyle={{ paddingLeft: 24, paddingRight: 12 }}
+        >
+          <View className="mr-4 h-40 w-32 rounded-3xl bg-[#E6E6E6]" />
+          <View className="mr-4 h-40 w-32 rounded-3xl bg-[#CFCFCF]" />
+          <View className="mr-4 h-40 w-32 rounded-3xl bg-[#F2F2F2]" />
+          <View className="h-40 w-32 rounded-3xl bg-[#BFBFBF]" />
+        </ScrollView>
+
+        <View className="mx-6 mt-8 rounded-[28px] border border-[#E0E0E0] bg-white p-5">
+          <Text className="text-[11px] tracking-[3px] text-[#666666]">
+            NOTE
+          </Text>
+          <Text className="mt-2 text-lg font-semibold text-black">
+            Keep neckline low, matte finish.
+          </Text>
+          <Text className="mt-2 text-[#4D4D4D]">
+            Saved for your next visit.
+          </Text>
+        </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

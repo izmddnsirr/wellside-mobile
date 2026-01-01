@@ -1,94 +1,28 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Tabs } from "expo-router";
 import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
-import { Platform, useColorScheme } from "react-native";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const labelColor = colorScheme === "dark" ? "white" : "black";
-  const iconTintColor = labelColor;
-
-
-  if (Platform.OS === "android") {
-    return (
-      <Tabs
-        screenOptions={{
-          tabBarActiveTintColor: iconTintColor,
-          tabBarLabelStyle: { color: labelColor },
-          headerShown: false,
-          tabBarStyle: {
-            height: 85,
-            paddingBottom: 0,
-            paddingTop: 5,
-            borderTopWidth: 0.5,
-            borderTopColor: "#d1d5db",
-            backgroundColor: "white",
-          },
-        }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: "Profile",
-            tabBarIcon: ({ color, size }) => (
-              <MaterialIcons name="home" size={size} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="appointment"
-          options={{
-            title: "Appointment",
-            tabBarIcon: ({ color, size }) => (
-              <MaterialIcons name="calendar-month" size={size} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="notification"
-          options={{
-            title: "Notification",
-            tabBarIcon: ({ color, size }) => (
-              <MaterialIcons name="notifications" size={size} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            title: "Profile",
-            tabBarIcon: ({ color, size }) => (
-              <MaterialIcons name="person" size={size} color={color} />
-            ),
-          }}
-        />
-      </Tabs>
-    );
-  }
-
   return (
-
-    <NativeTabs
-      labelStyle={{
-        color: labelColor,
-      }}
-      tintColor={iconTintColor}
-    >
+    <NativeTabs>
       {/* Home */}
       <NativeTabs.Trigger name="index">
         <Icon sf={{ default: "house.fill", selected: "house.fill" }} />
         <Label>Home</Label>
       </NativeTabs.Trigger>
 
-      {/* Appointment */}
-      <NativeTabs.Trigger name="appointment">
+      {/* Booking */}
+      <NativeTabs.Trigger name="booking">
         <Icon sf={{ default: "calendar", selected: "calendar" }} />
-        <Label>Appointment</Label>
+        <Label>Booking</Label>
       </NativeTabs.Trigger>
 
       {/* AI */}
-      <NativeTabs.Trigger name="ai" >
-        <Icon sf={{ default: "ellipsis.bubble.fill", selected: "ellipsis.bubble.fill" }} />
+      <NativeTabs.Trigger name="ai">
+        <Icon
+          sf={{
+            default: "ellipsis.bubble.fill",
+            selected: "ellipsis.bubble.fill",
+          }}
+        />
         <Label>AI</Label>
       </NativeTabs.Trigger>
 

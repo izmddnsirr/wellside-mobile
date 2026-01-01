@@ -21,6 +21,7 @@ export default function AuthLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen name="verified" options={{ headerShown: false }} />
     </Stack>
   );
 }

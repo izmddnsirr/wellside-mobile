@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -22,19 +23,27 @@ export default function RegisterScreen() {
   const onRegister = () => {
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
-      setErrorMessage("Email is required.");
+      const message = "Email is required.";
+      setErrorMessage(message);
+      Alert.alert("Check your details", message);
       return;
     }
     if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
-      setErrorMessage("Please enter a valid email.");
+      const message = "Please enter a valid email.";
+      setErrorMessage(message);
+      Alert.alert("Check your details", message);
       return;
     }
     if (password.length < 6) {
-      setErrorMessage("Password must be at least 6 characters.");
+      const message = "Password must be at least 6 characters.";
+      setErrorMessage(message);
+      Alert.alert("Check your details", message);
       return;
     }
     if (password !== confirmPassword) {
-      setErrorMessage("Passwords do not match.");
+      const message = "Passwords do not match.";
+      setErrorMessage(message);
+      Alert.alert("Check your details", message);
       return;
     }
     setErrorMessage("");
