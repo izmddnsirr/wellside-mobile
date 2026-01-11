@@ -1,15 +1,17 @@
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
   ActivityIndicator,
+  Alert,
+  Pressable,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../utils/supabase";
 
 type Profile = {
@@ -21,6 +23,7 @@ type Profile = {
 
 export default function ProfileEditScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -148,22 +151,29 @@ export default function ProfileEditScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-100">
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View className="mx-5 mt-6 flex-row justify-between items-center">
-          <View>
-            <Text className="text-sm text-gray-600">W E L L S I D E + </Text>
-            <Text className="text-3xl mt-1 font-semibold">Edit profile</Text>
-            <Text className="text-gray-500 text-lg">
-              Update your details
-            </Text>
-          </View>
-          <TouchableOpacity
+    <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
+        <View className="flex-row items-center justify-between px-5 pt-3">
+          <Pressable
             onPress={() => router.back()}
-            className="border px-6 py-3 rounded-full bg-white border-gray-300"
+            className="h-10 w-10 items-center justify-center"
+            hitSlop={10}
           >
-            <Text className="font-semibold">Back</Text>
-          </TouchableOpacity>
+            <Ionicons name="arrow-back" size={22} color="#0f172a" />
+          </Pressable>
+          <View className="h-10 w-10" />
+        </View>
+
+        <View className="px-5 pt-2">
+          <Text className="text-3xl font-semibold text-slate-900">
+            Edit profile
+          </Text>
+          <Text className="mt-1 text-base text-slate-600">
+            Update your details
+          </Text>
         </View>
 
         {isLoading ? (
@@ -171,34 +181,34 @@ export default function ProfileEditScreen() {
             <ActivityIndicator size="small" color="#111827" />
           </View>
         ) : (
-          <View className="mx-5 mt-6 rounded-3xl border border-gray-300 bg-white p-5">
-            <Text className="text-sm font-semibold text-gray-700 mb-3 tracking-widest">
-              FIRST NAME
+          <View className="px-5 pt-7">
+            <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
+              First Name
             </Text>
             <TextInput
-              className="bg-slate-50 border border-gray-300 rounded-xl p-5 text-base leading-5 mb-6"
+              className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
               placeholder="Enter your first name"
               autoCapitalize="words"
               value={firstName}
               onChangeText={setFirstName}
             />
 
-            <Text className="text-sm font-semibold text-gray-700 mb-3 tracking-widest">
-              LAST NAME
+            <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
+              Last Name
             </Text>
             <TextInput
-              className="bg-slate-50 border border-gray-300 rounded-xl p-5 text-base leading-5 mb-6"
+              className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
               placeholder="Enter your last name"
               autoCapitalize="words"
               value={lastName}
               onChangeText={setLastName}
             />
 
-            <Text className="text-sm font-semibold text-gray-700 mb-3 tracking-widest">
-              PHONE NUMBER
+            <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
+              Phone Number
             </Text>
             <TextInput
-              className="bg-slate-50 border border-gray-300 rounded-xl p-5 text-base leading-5 mb-6"
+              className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
               placeholder="Enter your phone number"
               keyboardType="phone-pad"
               autoCapitalize="none"
@@ -209,7 +219,7 @@ export default function ProfileEditScreen() {
             <TouchableOpacity
               onPress={onSave}
               disabled={isSaving}
-              className={`bg-black p-4 rounded-full active:opacity-80 ${
+              className={`bg-slate-900 p-4 rounded-full active:opacity-80 ${
                 isSaving ? "opacity-60" : ""
               }`}
             >
@@ -220,7 +230,7 @@ export default function ProfileEditScreen() {
 
             <TouchableOpacity
               onPress={onDelete}
-              className="mt-4 border border-red-300 bg-red-50 p-4 rounded-full active:opacity-80"
+              className="mt-4 border border-red-200 bg-red-50 p-4 rounded-full active:opacity-80"
             >
               <Text className="text-center text-red-600 font-semibold text-lg">
                 Delete profile
@@ -229,6 +239,6 @@ export default function ProfileEditScreen() {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

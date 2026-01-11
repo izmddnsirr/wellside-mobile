@@ -8,6 +8,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { BookingProvider } from "../context/BookingContext";
 import { OnboardingProvider } from "../context/OnboardingContext";
 import "../global.css";
 import { supabase } from "../utils/supabase";
@@ -60,27 +61,29 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <OnboardingProvider>
-        <StatusBar style="auto" />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen
-            name="index"
-            options={{
-              animation: "fade",
-            }}
-          />
-          <Stack.Screen
-            name="(auth)"
-            options={{
-              animation: "fade",
-            }}
-          />
-          <Stack.Screen
-            name="(tabs)"
-            options={{
-              animation: "fade",
-            }}
-          />
-        </Stack>
+        <BookingProvider>
+          <StatusBar style="auto" />
+          <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
+            <Stack.Screen
+              name="index"
+              options={{
+                animation: "slide_from_right",
+              }}
+            />
+            <Stack.Screen
+              name="(auth)"
+              options={{
+                animation: "slide_from_right",
+              }}
+            />
+            <Stack.Screen
+              name="(tabs)"
+              options={{
+                animation: "none",
+              }}
+            />
+          </Stack>
+        </BookingProvider>
       </OnboardingProvider>
     </SafeAreaProvider>
   );

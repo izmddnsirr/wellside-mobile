@@ -10,12 +10,13 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useOnboarding } from "../../context/OnboardingContext";
 import { supabase } from "../../utils/supabase";
 
 export default function DetailsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const {
     email,
@@ -80,6 +81,29 @@ export default function DetailsScreen() {
       return;
     }
 
+    const registeredUser = data.session?.user ?? data.user;
+    if (registeredUser) {
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert(
+          {
+            id: registeredUser.id,
+            email: registeredUser.email ?? email.trim(),
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            phone: phone.trim(),
+          },
+          { onConflict: "id" }
+        );
+
+      if (profileError) {
+        setIsSubmitting(false);
+        setErrorMessage(profileError.message);
+        Alert.alert("Profile setup failed", profileError.message);
+        return;
+      }
+    }
+
     reset();
     setIsSubmitting(false);
     if (!data.session) {
@@ -95,7 +119,10 @@ export default function DetailsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 px-5 bg-slate-100">
+    <View
+      className="flex-1 px-5 bg-slate-50"
+      style={{ paddingTop: insets.top }}
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -108,25 +135,21 @@ export default function DetailsScreen() {
         >
           <View>
             {/* Top Header */}
-            <View className="flex-row justify-between mt-6 mb-6">
-              <Text className="text-sm">W E L L S I D E +</Text>
-              <Text className="text-sm">R E G I S T E R</Text>
-            </View>
-
-            {/* Title + Subtitle */}
-            <View>
-              <Text className="text-4xl font-semibold mb-2">
+            <View className="mt-3">
+              <Text className="text-3xl mt-1 font-semibold text-slate-900">
                 Create account.
               </Text>
-              <Text className="mb-6 text-gray-600">Your personal barber.</Text>
+              <Text className="text-slate-600 text-base mt-1">
+                Your personal barber.
+              </Text>
             </View>
 
             {/* FULL NAME */}
-            <Text className="text-sm font-semibold text-gray-700 mb-3 tracking-widest">
+            <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
               FIRST NAME
             </Text>
             <TextInput
-              className="bg-slate-50 border border-gray-300 rounded-xl p-5 text-base leading-5 mb-6"
+              className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
               placeholder="Enter your first name"
               autoCapitalize="words"
               value={firstName}
@@ -134,11 +157,11 @@ export default function DetailsScreen() {
             />
 
             {/* FULL NAME */}
-            <Text className="text-sm font-semibold text-gray-700 mb-3 tracking-widest">
+            <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
               LAST NAME
             </Text>
             <TextInput
-              className="bg-slate-50 border border-gray-300 rounded-xl p-5 text-base leading-5 mb-6"
+              className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
               placeholder="Enter your last name"
               autoCapitalize="words"
               value={lastName}
@@ -146,11 +169,11 @@ export default function DetailsScreen() {
             />
 
             {/* PHONE NUMBER */}
-            <Text className="text-sm font-semibold text-gray-700 mb-3 tracking-widest">
+            <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
               PHONE NUMBER
             </Text>
             <TextInput
-              className="bg-slate-50 border border-gray-300 rounded-xl p-5 text-base leading-5 mb-6"
+              className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
               placeholder="Enter your phone number"
               keyboardType="phone-pad"
               autoCapitalize="none"
@@ -166,7 +189,7 @@ export default function DetailsScreen() {
             <Pressable
               onPress={onRegister}
               disabled={isSubmitting}
-              className={`bg-black p-4 mt-2 rounded-full active:opacity-80 mb-6 ${
+              className={`bg-slate-900 p-4 mt-2 rounded-full active:opacity-80 mb-6 ${
                 isSubmitting ? "opacity-60" : ""
               }`}
             >
@@ -177,16 +200,18 @@ export default function DetailsScreen() {
 
             {/* Login Link */}
             <View className="flex-row justify-center mb-4">
-              <Text className="text-base text-gray-700">
+              <Text className="text-base text-slate-600">
                 Already have an account?{" "}
               </Text>
               <Pressable onPress={() => router.push("/(auth)/login")}>
-                <Text className="text-base font-semibold text-line">Login</Text>
+                <Text className="text-base font-semibold text-slate-900">
+                  Login
+                </Text>
               </Pressable>
             </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

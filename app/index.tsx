@@ -33,7 +33,7 @@ export default function SplashScreen() {
   }, []);
 
   return (
-    <View className="flex-1 items-center justify-center bg-slate-100">
+    <View className="flex-1 items-center justify-center bg-slate-50">
       <StatusBar style="auto" />
 
       <Image
@@ -47,10 +47,10 @@ export default function SplashScreen() {
 
       {/* Loader at the bottom */}
       <View className="absolute bottom-20 left-0 right-0 items-center">
-        <Text className="pb-6 text-neutral-500">
+        <Text className="pb-6 text-slate-600">
           {isChecking ? "Preparing your chair" : "Redirecting"}
         </Text>
-        <ActivityIndicator size="small" color="#000000" />
+        <ActivityIndicator size="small" color="#0f172a" />
       </View>
     </View>
   );

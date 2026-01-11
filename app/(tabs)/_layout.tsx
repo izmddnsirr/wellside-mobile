@@ -19,8 +19,8 @@ export default function TabLayout() {
       <NativeTabs.Trigger name="ai">
         <Icon
           sf={{
-            default: "ellipsis.bubble.fill",
-            selected: "ellipsis.bubble.fill",
+            default: "sparkles",
+            selected: "sparkles",
           }}
         />
         <Label>AI</Label>

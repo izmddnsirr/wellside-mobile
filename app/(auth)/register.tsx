@@ -10,12 +10,13 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useOnboarding } from "../../context/OnboardingContext";
 
 export default function RegisterScreen() {
   const router = useRouter();
-  
+  const insets = useSafeAreaInsets();
+
   const { email, password, setEmail, setPassword } = useOnboarding();
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -51,7 +52,10 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 px-5 bg-slate-100">
+    <View
+      className="flex-1 px-5 bg-slate-50"
+      style={{ paddingTop: insets.top }}
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -64,25 +68,21 @@ export default function RegisterScreen() {
         >
           <View>
             {/* Top Header */}
-            <View className="flex-row justify-between mt-6 mb-6">
-              <Text className="text-sm">W E L L S I D E +</Text>
-              <Text className="text-sm">R E G I S T E R</Text>
-            </View>
-
-            {/* Title + Subtitle */}
-            <View>
-              <Text className="text-4xl font-semibold mb-2">
+            <View className="mt-3">
+              <Text className="text-3xl mt-1 font-semibold text-slate-900">
                 Create account.
               </Text>
-              <Text className="mb-6 text-gray-600">Your personal barber.</Text>
+              <Text className="text-slate-600 text-base mt-1">
+                Your personal barber.
+              </Text>
             </View>
 
             {/* EMAIL */}
-            <Text className="text-sm font-semibold text-gray-700 mb-3 tracking-widest">
+            <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
               EMAIL
             </Text>
             <TextInput
-              className="bg-slate-50 border border-gray-300 rounded-xl p-5 text-base leading-5 mb-6"
+              className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
               placeholder="Enter your email"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -91,11 +91,11 @@ export default function RegisterScreen() {
             />
 
             {/* PASSWORD */}
-            <Text className="text-sm font-semibold text-gray-700 mb-3 tracking-widest">
+            <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
               PASSWORD
             </Text>
             <TextInput
-              className="bg-slate-50 border border-gray-300 rounded-xl p-5 text-base leading-5 mb-6"
+              className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
               placeholder="Enter your password"
               secureTextEntry
               autoCapitalize="none"
@@ -104,11 +104,11 @@ export default function RegisterScreen() {
             />
 
             {/* CONFIRM PASSWORD */}
-            <Text className="text-sm font-semibold text-gray-700 mb-3 tracking-widest">
+            <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
               CONFIRM PASSWORD
             </Text>
             <TextInput
-              className="bg-slate-50 border border-gray-300 rounded-xl p-5 text-base leading-5 mb-6"
+              className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
               placeholder="Confirm your password"
               secureTextEntry
               autoCapitalize="none"
@@ -123,7 +123,7 @@ export default function RegisterScreen() {
             {/* Register Button */}
             <Pressable
               onPress={onRegister}
-              className="bg-black p-4 mt-2 rounded-full active:opacity-80 mb-6"
+              className="bg-slate-900 p-4 mt-2 rounded-full active:opacity-80 mb-6"
             >
               <Text className="text-center text-white font-semibold text-lg">
                 Next
@@ -132,16 +132,18 @@ export default function RegisterScreen() {
 
             {/* Login Link */}
             <View className="flex-row justify-center mb-4">
-              <Text className="text-base text-gray-700">
+              <Text className="text-base text-slate-600">
                 Already have an account?{" "}
               </Text>
               <Pressable onPress={() => router.push("/(auth)/login")}>
-                <Text className="text-base font-semibold text-line">Login</Text>
+                <Text className="text-base font-semibold text-slate-900">
+                  Login
+                </Text>
               </Pressable>
             </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -1,4 +1,5 @@
 import { useFocusEffect } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
@@ -21,12 +22,46 @@ type Profile = {
   phone: string | null;
 };
 
+type HistoryItem = {
+  id: string;
+  startAt: string;
+  endAt: string;
+  serviceName: string;
+  barberName: string;
+  price: number | null;
+  status: "completed" | "cancelled";
+};
+
+const TIME_ZONE = "Asia/Kuala_Lumpur";
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: TIME_ZONE,
+  weekday: "short",
+  month: "short",
+  day: "numeric",
+});
+const timeFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: TIME_ZONE,
+  hour: "numeric",
+  minute: "2-digit",
+});
+const dayFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: TIME_ZONE,
+  day: "2-digit",
+});
+const monthFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: TIME_ZONE,
+  month: "short",
+});
+
 export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
   const fetchProfile = useCallback(async () => {
     const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -59,13 +94,92 @@ export default function ProfileScreen() {
     });
   }, []);
 
+  const fetchHistory = useCallback(async () => {
+    setIsHistoryLoading(true);
+    setHistoryError(null);
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) {
+      setHistory([]);
+      setIsHistoryLoading(false);
+      return;
+    }
+
+    const { data: bookingData, error: bookingError } = await supabase
+      .from("bookings")
+      .select("id,start_at,end_at,service_id,barber_id,status")
+      .eq("customer_id", authData.user.id)
+      .in("status", ["completed", "cancelled"])
+      .order("start_at", { ascending: false });
+
+    if (bookingError) {
+      setHistory([]);
+      setIsHistoryLoading(false);
+      setHistoryError("Unable to load booking history.");
+      return;
+    }
+
+    const serviceIds = Array.from(
+      new Set((bookingData ?? []).map((b) => b.service_id).filter(Boolean))
+    );
+    const barberIds = Array.from(
+      new Set((bookingData ?? []).map((b) => b.barber_id).filter(Boolean))
+    );
+
+    const [{ data: serviceData }, { data: barberData }] = await Promise.all([
+      serviceIds.length
+        ? supabase
+            .from("services")
+            .select("id,name,price")
+            .in("id", serviceIds)
+        : Promise.resolve({ data: [] }),
+      barberIds.length
+        ? supabase
+            .from("profiles")
+            .select("id,display_name,first_name,last_name")
+            .in("id", barberIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const serviceMap = new Map(
+      (serviceData ?? []).map((service) => [service.id, service])
+    );
+    const barberMap = new Map(
+      (barberData ?? []).map((barber) => {
+        const barberName =
+          barber.display_name?.trim() ||
+          [barber.first_name, barber.last_name]
+            .filter(Boolean)
+            .join(" ")
+            .trim() ||
+          "Barber";
+        return [barber.id, barberName];
+      })
+    );
+
+    const historyItems: HistoryItem[] = (bookingData ?? []).map((booking) => {
+      const service = serviceMap.get(booking.service_id);
+      return {
+        id: booking.id,
+        startAt: booking.start_at,
+        endAt: booking.end_at,
+        serviceName: service?.name ?? "Service",
+        barberName: barberMap.get(booking.barber_id) ?? "Barber",
+        price: service?.price ?? null,
+        status: booking.status,
+      };
+    });
+
+    setHistory(historyItems);
+    setIsHistoryLoading(false);
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       let isMounted = true;
 
       const load = async () => {
         setIsLoading(true);
-        await fetchProfile();
+        await Promise.all([fetchProfile(), fetchHistory()]);
         if (isMounted) {
           setIsLoading(false);
         }
@@ -81,9 +195,9 @@ export default function ProfileScreen() {
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await fetchProfile();
+    await Promise.all([fetchProfile(), fetchHistory()]);
     setIsRefreshing(false);
-  }, [fetchProfile]);
+  }, [fetchProfile, fetchHistory]);
 
   const onLogout = async () => {
     Alert.alert("Log out?", "You can sign in again anytime.", [
@@ -111,7 +225,7 @@ export default function ProfileScreen() {
   }`.toUpperCase();
 
   return (
-    <View className="flex-1 bg-slate-100" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -119,30 +233,32 @@ export default function ProfileScreen() {
         }
       >
         {/* Greeting Section */}
-        <View className="mx-5 mt-6 flex-row justify-between items-center">
+        <View className="mx-5 mt-3 flex-row justify-between items-center">
           <View>
-            <Text className="text-sm text-gray-600">W E L L S I D E + </Text>
-            <Text className="text-3xl mt-1 font-semibold">Profile</Text>
-            <Text className="text-gray-500 text-lg">
+            <Text className="text-3xl mt-1 font-semibold text-slate-900">
+              Profile
+            </Text>
+            <Text className="text-slate-600 text-base mt-1">
               Customized your profile
             </Text>
           </View>
           <TouchableOpacity
             onPress={onLogout}
-            className="border px-6 py-3 rounded-full bg-white border-gray-300"
+            className="bg-white px-4 py-3 rounded-full flex-row items-center border border-slate-200"
           >
-            <Text className="font-semibold">Log out</Text>
+            <Ionicons name="log-out-outline" size={16} color="#0f172a" />
+            <Text className="font-semibold text-slate-900 ml-2">Log out</Text>
           </TouchableOpacity>
         </View>
 
         {/* Card */}
-        <View className="bg-slate-950 mx-5 mt-7 rounded-3xl p-5 flex-row items-center">
-          <View className="w-16 h-16 rounded-full bg-gray-300 mr-5 overflow-hidden justify-center items-center">
+        <View className="bg-slate-900 mx-5 mt-6 rounded-3xl p-5 flex-row items-center">
+          <View className="w-16 h-16 rounded-full bg-slate-200 mr-5 overflow-hidden justify-center items-center">
             {/* Replace the source URI with user profile image path if available */}
             {isLoading ? (
               <ActivityIndicator size="small" color="#111827" />
             ) : (
-              <Text className="text-2xl text-black font-semibold text-center">
+              <Text className="text-2xl text-slate-900 font-semibold text-center">
                 {initials || "?"}
               </Text>
             )}
@@ -153,7 +269,7 @@ export default function ProfileScreen() {
             <Text className="text-white font-semibold text-xl">
               {isLoading ? "Loading..." : fullName || "Your Profile"}
             </Text>
-            <Text className="text-gray-300 text-base mt-1">
+            <Text className="text-slate-200 text-base mt-1">
               {isLoading ? "Fetching details" : profile?.email || "—"}
             </Text>
           </View>
@@ -161,49 +277,129 @@ export default function ProfileScreen() {
             onPress={() => router.push("/profile-edit")}
             className="bg-white px-4 py-2 rounded-full active:opacity-80"
           >
-            <Text className="font-semibold text-black">Edit</Text>
+            <Text className="font-semibold text-slate-900">Edit</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Preferences */}
-        <Text className="text-xl font-semibold mx-5 mt-7">Preferences</Text>
-        <View className="mx-5 mt-3 rounded-2xl border border-gray-300 bg-white p-5">
-          <View className="flex-row justify-between">
-            <Text className="text-gray-700">Preferred barber</Text>
-            <Text className="font-semibold">Arif</Text>
+        {/* History */}
+        <View className="mx-5 mt-6">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-xs font-semibold tracking-[0.25em] text-slate-500">
+              Booking History
+            </Text>
+            <View className="rounded-full border border-slate-200 bg-white px-3 py-1">
+              <Text className="text-xs font-semibold text-slate-700">
+                {history.length} visits
+              </Text>
+            </View>
           </View>
-          <View className="h-px bg-gray-200 my-4" />
-          <View className="flex-row justify-between">
-            <Text className="text-gray-700">Style</Text>
-            <Text className="font-semibold">Skin fade</Text>
-          </View>
-          <View className="h-px bg-gray-200 my-4" />
-          <View className="flex-row justify-between">
-            <Text className="text-gray-700">Allergies</Text>
-            <Text className="font-semibold">None</Text>
-          </View>
-        </View>
 
-        {/* Billing */}
-        <Text className="text-xl font-semibold mx-5 mt-7">Billing</Text>
-        <View className="mx-5 mt-3 rounded-2xl border border-gray-300 bg-white p-5">
-          <View className="flex-row justify-between">
-            <Text className="text-gray-700">Primary</Text>
-            <Text className="font-semibold">Visa ···· 1872</Text>
-          </View>
-          <View className="h-px bg-gray-200 my-4" />
-          <View className="flex-row justify-between">
-            <Text className="text-gray-700">Next payment</Text>
-            <Text className="font-semibold">RM35 · Fri</Text>
-          </View>
-        </View>
+          <View className="mt-4 rounded-3xl bg-slate-900 p-5">
+            <View className="flex-row items-center justify-between">
+              <View>
+                <Text className="text-white text-xl font-semibold">
+                  Recent visits
+                </Text>
+                <Text className="text-slate-300 text-sm mt-1">
+                  Track completed and cancelled appointments
+                </Text>
+              </View>
+              <View className="h-10 w-10 rounded-full bg-white/10 items-center justify-center">
+                <Ionicons name="time-outline" size={18} color="#e2e8f0" />
+              </View>
+            </View>
 
-        {/* Support */}
-        <Text className="text-xl font-semibold mx-5 mt-7">Support</Text>
-        <View className="mx-5 mt-3 rounded-2xl border border-gray-300 bg-white p-5">
-          <Text className="text-gray-700">Help center</Text>
-          <View className="h-px bg-gray-200 my-4" />
-          <Text className="text-gray-700">Terms & privacy</Text>
+            <View className="mt-5">
+              {isHistoryLoading ? (
+                <View className="items-center justify-center rounded-2xl border border-slate-700 bg-slate-800 px-6 py-8">
+                  <ActivityIndicator size="small" color="#e2e8f0" />
+                  <Text className="text-slate-300 text-sm mt-3">
+                    Loading your visits
+                  </Text>
+                </View>
+              ) : null}
+              {historyError ? (
+                <View className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-4">
+                  <Text className="text-sm text-rose-200">{historyError}</Text>
+                </View>
+              ) : null}
+              {!isHistoryLoading && !historyError && history.length === 0 ? (
+                <View className="items-center justify-center rounded-2xl border border-slate-700 bg-slate-800 px-6 py-10">
+                  <Ionicons name="calendar-outline" size={32} color="#e2e8f0" />
+                  <Text className="mt-3 text-sm text-slate-300 text-center">
+                    No visits yet. Your next booking will show up here.
+                  </Text>
+                </View>
+              ) : null}
+              {!isHistoryLoading && !historyError && history.length > 0 ? (
+                <View>
+                  {history.map((item, index) => {
+                    const startDate = new Date(item.startAt);
+                    const endDate = new Date(item.endAt);
+                    const dateLabel = Number.isNaN(startDate.getTime())
+                      ? "Date unavailable"
+                      : dateFormatter.format(startDate);
+                    const timeLabel =
+                      Number.isNaN(startDate.getTime()) ||
+                      Number.isNaN(endDate.getTime())
+                        ? "Time unavailable"
+                        : `${timeFormatter.format(
+                            startDate
+                          )} - ${timeFormatter.format(endDate)}`;
+                    const dayLabel = Number.isNaN(startDate.getTime())
+                      ? "--"
+                      : dayFormatter.format(startDate);
+                    const monthLabel = Number.isNaN(startDate.getTime())
+                      ? "--"
+                      : monthFormatter.format(startDate).toUpperCase();
+
+                    return (
+                      <View
+                        key={item.id}
+                        className={`rounded-2xl border border-slate-200 bg-white px-4 py-3 ${
+                          index === history.length - 1 ? "" : "mb-3"
+                        }`}
+                      >
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-base font-semibold text-slate-900">
+                            {item.serviceName}
+                          </Text>
+                          <View
+                            className={`rounded-full px-3 py-1 ${
+                              item.status === "cancelled"
+                                ? "bg-rose-100"
+                                : "bg-emerald-100"
+                            }`}
+                          >
+                            <Text
+                              className={`text-xs font-semibold ${
+                                item.status === "cancelled"
+                                  ? "text-rose-700"
+                                  : "text-emerald-700"
+                              }`}
+                            >
+                              {item.status.toUpperCase()}
+                            </Text>
+                          </View>
+                        </View>
+                        <Text className="text-sm text-slate-600 mt-1">
+                          {dateLabel} · {timeLabel}
+                        </Text>
+                        <View className="mt-2 flex-row items-center justify-between">
+                          <Text className="text-sm text-slate-500">
+                            {item.barberName}
+                          </Text>
+                          <Text className="text-sm font-semibold text-slate-900">
+                            {item.price ? `RM${item.price}` : "RM0"}
+                          </Text>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              ) : null}
+            </View>
+          </View>
         </View>
 
         <View className="h-10" />
