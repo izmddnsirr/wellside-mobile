@@ -1,7 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { Image, Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Image,
+  Modal,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBooking } from "../../context/BookingContext";
 import { getAvailableSlots } from "../../utils/slots";
@@ -115,6 +123,8 @@ export default function SelectTimeScreen() {
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [slotError, setSlotError] = useState<string | null>(null);
   const [timeSlots, setTimeSlots] = useState<Slot[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const isMountedRef = useRef(true);
   const dateOptions = useMemo(() => buildDateOptions(), []);
 
   const barberName = selectedBarber?.displayName ?? "Select barber";
@@ -129,75 +139,75 @@ export default function SelectTimeScreen() {
     return baseDate ? monthYearFormatter.format(baseDate) : "";
   }, [dateOptions, selectedDate]);
 
+  const fetchBarbers = useCallback(async () => {
+    setIsLoadingBarbers(true);
+    setBarberError(null);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(
+        "id,role,first_name,last_name,display_name,avatar_url,is_active"
+      )
+      .eq("is_active", true)
+      .eq("role", "barber")
+      .order("display_name");
+
+    if (!isMountedRef.current) {
+      return;
+    }
+
+    if (error) {
+      setBarberError("Unable to load professionals right now.");
+      setBarbers([]);
+    } else {
+      setBarbers(data ?? []);
+    }
+    setIsLoadingBarbers(false);
+  }, []);
+
+  const fetchSlots = useCallback(async () => {
+    if (!selectedBarber?.id || !dateISO) {
+      if (isMountedRef.current) {
+        setTimeSlots([]);
+      }
+      return;
+    }
+
+    setIsLoadingSlots(true);
+    setSlotError(null);
+    try {
+      const slots = await getAvailableSlots(selectedBarber.id, dateISO);
+      if (isMountedRef.current) {
+        setTimeSlots(slots);
+      }
+    } catch (error) {
+      if (isMountedRef.current) {
+        setSlotError("Unable to load available slots right now.");
+        setTimeSlots([]);
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setIsLoadingSlots(false);
+      }
+    }
+  }, [dateISO, selectedBarber?.id]);
+
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchBarbers = async () => {
-      setIsLoadingBarbers(true);
-      setBarberError(null);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(
-          "id,role,first_name,last_name,display_name,avatar_url,is_active"
-        )
-        .eq("is_active", true)
-        .eq("role", "barber")
-        .order("display_name");
-
-      if (!isMounted) {
-        return;
-      }
-
-      if (error) {
-        setBarberError("Unable to load professionals right now.");
-        setBarbers([]);
-      } else {
-        setBarbers(data ?? []);
-      }
-      setIsLoadingBarbers(false);
-    };
-
     fetchBarbers();
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
     };
-  }, []);
+  }, [fetchBarbers]);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchSlots = async () => {
-      if (!selectedBarber?.id || !dateISO) {
-        setTimeSlots([]);
-        return;
-      }
-
-      setIsLoadingSlots(true);
-      setSlotError(null);
-      try {
-        const slots = await getAvailableSlots(selectedBarber.id, dateISO);
-        if (isMounted) {
-          setTimeSlots(slots);
-        }
-      } catch (error) {
-        if (isMounted) {
-          setSlotError("Unable to load available slots right now.");
-          setTimeSlots([]);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoadingSlots(false);
-        }
-      }
-    };
-
     fetchSlots();
+  }, [fetchSlots]);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [dateISO, selectedBarber?.id]);
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await Promise.all([fetchBarbers(), fetchSlots()]);
+    setIsRefreshing(false);
+  }, [fetchBarbers, fetchSlots]);
 
   const professionals = useMemo(() => {
     return barbers.map((barber) => {
@@ -234,6 +244,9 @@ export default function SelectTimeScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        }
       >
         <View className="flex-row items-center justify-between px-5 pt-3">
           <Pressable
@@ -319,7 +332,7 @@ export default function SelectTimeScreen() {
                   className={`mr-4 items-center ${isSelected ? "" : ""}`}
                 >
                   <View
-                    className={`h-16 w-16 items-center justify-center rounded-full border ${
+                    className={`h-20 w-20 items-center justify-center rounded-full border ${
                       isSelected
                         ? "border-transparent bg-slate-900"
                         : "border-slate-200 bg-white"
@@ -371,7 +384,7 @@ export default function SelectTimeScreen() {
                   });
                   router.push("/booking/review-confirm");
                 }}
-                className={`mb-4 rounded-3xl border px-4 py-4 ${
+                className={`mb-4 rounded-3xl border px-4 py-5 ${
                   isSelected
                     ? "border-slate-900 bg-slate-900"
                     : "border-slate-200 bg-white"
@@ -408,7 +421,7 @@ export default function SelectTimeScreen() {
 
           <View className="px-5 pt-2">
             <Text className="text-3xl font-semibold text-slate-900">
-              Select professional
+              Select barber
             </Text>
             <Text className="mt-1 text-base text-slate-600">
               Switch to another barber.
@@ -422,7 +435,7 @@ export default function SelectTimeScreen() {
             <View className="px-5 pt-6 flex-row flex-wrap justify-between">
               {isLoadingBarbers ? (
                 <Text className="mt-2 text-sm text-slate-600">
-                  Loading professionals...
+                  Loading barbers...
                 </Text>
               ) : null}
               {barberError ? (
@@ -430,7 +443,7 @@ export default function SelectTimeScreen() {
               ) : null}
               {!isLoadingBarbers && !barberError && barbers.length === 0 ? (
                 <Text className="mt-2 text-sm text-slate-600">
-                  No professionals available right now.
+                  No barbers available right now.
                 </Text>
               ) : null}
               {professionals.map((pro) => (

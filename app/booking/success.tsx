@@ -60,6 +60,9 @@ export default function BookingSuccessScreen() {
     formatTimeRange(selectedSlot?.startAt, selectedSlot?.endAt) ??
     "Time not available";
   const barberName = selectedBarber?.displayName ?? "Professional";
+  const durationLabel = selectedService?.durationMinutes
+    ? `${selectedService.durationMinutes} min`
+    : "Duration unavailable";
 
   return (
     <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top }}>
@@ -92,61 +95,58 @@ export default function BookingSuccessScreen() {
         </View>
 
         <View className="mt-6 px-5">
-          <View className="rounded-3xl border border-slate-200 bg-white p-4">
-            <Text className="text-xs font-semibold text-slate-600 tracking-[0.2em]">
-              Appointment
-            </Text>
-            <View className="mt-3 flex-row items-center">
-              <Ionicons name="calendar-outline" size={18} color="#0f172a" />
-              <Text className="ml-3 text-base font-semibold text-slate-900">
+          <View className="rounded-3xl border border-slate-200 bg-white overflow-hidden">
+            <View className="bg-slate-900 px-5 py-4">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-xs font-semibold tracking-[0.2em] text-slate-300">
+                  CONFIRMED
+                </Text>
+                <View className="h-8 w-8 items-center justify-center rounded-full bg-white/10">
+                  <Ionicons name="checkmark" size={18} color="#ffffff" />
+                </View>
+              </View>
+              <Text className="mt-2 text-lg font-semibold text-white">
                 {dateLabel}
               </Text>
+              <Text className="mt-1 text-sm text-slate-300">{slotLabel}</Text>
             </View>
-            <View className="mt-3 flex-row items-center">
-              <Ionicons name="time-outline" size={18} color="#0f172a" />
-              <Text className="ml-3 text-base font-semibold text-slate-900">
-                {slotLabel}
+
+            <View className="px-5 py-4">
+              <Text className="text-xs font-semibold text-slate-500 tracking-[0.2em]">
+                Appointment
               </Text>
-            </View>
-            <View className="mt-3 flex-row items-center">
-              <Ionicons name="person-outline" size={18} color="#0f172a" />
-              <Text className="ml-3 text-base font-semibold text-slate-900">
-                {barberName}
-              </Text>
+              <View className="mt-3 flex-row items-center">
+                <Ionicons name="person-outline" size={18} color="#0f172a" />
+                <Text className="ml-3 text-base font-semibold text-slate-900">
+                  {barberName}
+                </Text>
+              </View>
+              <View className="mt-3 flex-row items-center">
+                <Ionicons name="construct-outline" size={18} color="#0f172a" />
+                <Text className="ml-3 text-base font-semibold text-slate-900">
+                  {selectedService?.name ?? "Service"}
+                </Text>
+              </View>
+              <View className="mt-2 flex-row items-center">
+                <Ionicons name="time-outline" size={18} color="#0f172a" />
+                <Text className="ml-3 text-sm text-slate-600">
+                  {durationLabel}
+                </Text>
+              </View>
+
+              {bookingCode ? (
+                <View className="mt-4 rounded-2xl bg-slate-100 px-4 py-3">
+                  <Text className="text-xs font-semibold text-slate-500 tracking-[0.2em]">
+                    Booking code
+                  </Text>
+                  <Text className="mt-2 text-lg font-semibold text-slate-900">
+                    {bookingCode}
+                  </Text>
+                </View>
+              ) : null}
             </View>
           </View>
         </View>
-
-        <View className="mt-4 px-5">
-          <View className="rounded-3xl border border-slate-200 bg-white p-4">
-            <Text className="text-xs font-semibold text-slate-600 tracking-[0.2em]">
-              Service
-            </Text>
-            <View className="mt-3">
-              <Text className="text-base font-semibold text-slate-900">
-                {selectedService?.name ?? "Service"}
-              </Text>
-              <Text className="mt-1 text-sm text-slate-600">
-                {selectedService?.durationMinutes
-                  ? `${selectedService.durationMinutes} min`
-                  : "Duration unavailable"}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {bookingCode ? (
-          <View className="mt-4 px-5">
-            <View className="rounded-3xl border border-slate-200 bg-white p-4">
-              <Text className="text-xs font-semibold text-slate-600 tracking-[0.2em]">
-                Booking code
-              </Text>
-              <Text className="mt-2 text-lg font-semibold text-slate-900">
-                {bookingCode}
-              </Text>
-            </View>
-          </View>
-        ) : null}
       </ScrollView>
 
       <View
@@ -159,7 +159,7 @@ export default function BookingSuccessScreen() {
             router.dismissAll();
             router.replace("/(tabs)/booking");
           }}
-          className="rounded-full bg-slate-900 px-6 py-3"
+          className="rounded-full bg-slate-900 px-6 py-4 mb-2"
         >
           <Text className="text-center text-base font-semibold text-white">
             Done

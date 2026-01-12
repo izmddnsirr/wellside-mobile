@@ -109,9 +109,17 @@ export default function DetailsScreen() {
     if (!data.session) {
       Alert.alert(
         "Confirm your email",
-        "Check your inbox to confirm your email before signing in."
+        "Check your inbox to confirm your email before signing in.",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              router.dismissAll();
+              router.replace("/(auth)/login");
+            },
+          },
+        ]
       );
-      router.replace("/(auth)/login");
       return;
     }
 
@@ -137,16 +145,16 @@ export default function DetailsScreen() {
             {/* Top Header */}
             <View className="mt-3">
               <Text className="text-3xl mt-1 font-semibold text-slate-900">
-                Create account.
+                Enter Details.
               </Text>
-              <Text className="text-slate-600 text-base mt-1">
-                Your personal barber.
+              <Text className="text-slate-600 text-base mt-1 mb-6">
+                Register now to book your seat.
               </Text>
             </View>
 
             {/* FULL NAME */}
             <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
-              FIRST NAME
+              First Name
             </Text>
             <TextInput
               className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
@@ -158,7 +166,7 @@ export default function DetailsScreen() {
 
             {/* FULL NAME */}
             <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
-              LAST NAME
+              Last Name
             </Text>
             <TextInput
               className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
@@ -170,12 +178,12 @@ export default function DetailsScreen() {
 
             {/* PHONE NUMBER */}
             <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
-              PHONE NUMBER
+              Phone Number
             </Text>
             <TextInput
               className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
               placeholder="Enter your phone number"
-              keyboardType="phone-pad"
+              keyboardType="number-pad"
               autoCapitalize="none"
               value={phone}
               onChangeText={(value) => setPhone(value)}
@@ -199,16 +207,16 @@ export default function DetailsScreen() {
             </Pressable>
 
             {/* Login Link */}
-            <View className="flex-row justify-center mb-4">
+            {/* <View className="flex-row justify-center mb-4">
               <Text className="text-base text-slate-600">
                 Already have an account?{" "}
               </Text>
-              <Pressable onPress={() => router.push("/(auth)/login")}>
+              <Pressable onPress={() => router.replace("/(auth)/login")}>
                 <Text className="text-base font-semibold text-slate-900">
                   Login
                 </Text>
               </Pressable>
-            </View>
+            </View> */}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

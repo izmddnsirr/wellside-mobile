@@ -1,7 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Image,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBooking } from "../../context/BookingContext";
 import { supabase } from "../../utils/supabase";
@@ -23,42 +30,48 @@ export default function SelectProfessionalScreen() {
   const { setBarber } = useBooking();
   const [barbers, setBarbers] = useState<BarberRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
+
+  const fetchBarbers = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(
+        "id,role,first_name,last_name,display_name,avatar_url,barber_level,is_active"
+      )
+      .eq("is_active", true)
+      .eq("role", "barber")
+      .order("display_name");
+
+    if (!isMountedRef.current) {
+      return;
+    }
+
+    if (error) {
+      setErrorMessage("Unable to load professionals right now.");
+      setBarbers([]);
+    } else {
+      setBarbers(data ?? []);
+    }
+    setIsLoading(false);
+  }, []);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchBarbers = async () => {
-      setIsLoading(true);
-      setErrorMessage(null);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(
-          "id,role,first_name,last_name,display_name,avatar_url,barber_level,is_active"
-        )
-        .eq("is_active", true)
-        .eq("role", "barber")
-        .order("display_name");
-
-      if (!isMounted) {
-        return;
-      }
-
-      if (error) {
-        setErrorMessage("Unable to load professionals right now.");
-        setBarbers([]);
-      } else {
-        setBarbers(data ?? []);
-      }
-      setIsLoading(false);
-    };
-
     fetchBarbers();
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
     };
-  }, []);
+  }, [fetchBarbers]);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await fetchBarbers();
+    setIsRefreshing(false);
+  }, [fetchBarbers]);
 
   const professionals = useMemo(() => {
     return barbers.map((barber) => {
@@ -84,6 +97,9 @@ export default function SelectProfessionalScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        }
       >
         <View className="flex-row items-center justify-between px-5 pt-3">
           <Pressable
@@ -107,7 +123,7 @@ export default function SelectProfessionalScreen() {
 
         <View className="px-5 pt-2">
           <Text className="text-3xl font-semibold text-slate-900">
-            Select professional
+            Select barbers
           </Text>
           <Text className="mt-1 text-base text-slate-600">
             Choose your preferred barber.
@@ -117,7 +133,7 @@ export default function SelectProfessionalScreen() {
         <View className="px-5 pt-6 flex-row flex-wrap justify-between">
           {isLoading ? (
             <Text className="mt-2 text-sm text-slate-600">
-              Loading professionals...
+              Loading barbers...
             </Text>
           ) : null}
           {errorMessage ? (
@@ -125,7 +141,7 @@ export default function SelectProfessionalScreen() {
           ) : null}
           {!isLoading && !errorMessage && barbers.length === 0 ? (
             <Text className="mt-2 text-sm text-slate-600">
-              No professionals available right now.
+              No barbers available right now.
             </Text>
           ) : null}
           {professionals.map((pro) => (

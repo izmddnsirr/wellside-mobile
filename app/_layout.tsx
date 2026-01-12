@@ -48,7 +48,10 @@ export default function RootLayout() {
       return;
     }
 
-    const inAuthGroup = segments[0] === "(auth)" || segments[0] === undefined;
+    const inAuthGroup =
+      segments[0] === "(auth)" ||
+      segments[0] === "(onboarding)" ||
+      segments[0] === undefined;
     const inTabsGroup = segments[0] === "(tabs)";
 
     if (!session && inTabsGroup) {
@@ -80,6 +83,12 @@ export default function RootLayout() {
               name="(tabs)"
               options={{
                 animation: "none",
+              }}
+            />
+            <Stack.Screen
+              name="(onboarding)"
+              options={{
+                animation: "slide_from_right",
               }}
             />
           </Stack>

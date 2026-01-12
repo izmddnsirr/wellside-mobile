@@ -72,14 +72,14 @@ export default function RegisterScreen() {
               <Text className="text-3xl mt-1 font-semibold text-slate-900">
                 Create account.
               </Text>
-              <Text className="text-slate-600 text-base mt-1">
+              <Text className="text-slate-600 text-base mt-1 mb-6">
                 Your personal barber.
               </Text>
             </View>
 
             {/* EMAIL */}
             <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
-              EMAIL
+              Email
             </Text>
             <TextInput
               className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
@@ -92,7 +92,7 @@ export default function RegisterScreen() {
 
             {/* PASSWORD */}
             <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
-              PASSWORD
+              Password
             </Text>
             <TextInput
               className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
@@ -105,7 +105,7 @@ export default function RegisterScreen() {
 
             {/* CONFIRM PASSWORD */}
             <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
-              CONFIRM PASSWORD
+              Confirm Password
             </Text>
             <TextInput
               className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
@@ -135,7 +135,7 @@ export default function RegisterScreen() {
               <Text className="text-base text-slate-600">
                 Already have an account?{" "}
               </Text>
-              <Pressable onPress={() => router.push("/(auth)/login")}>
+              <Pressable onPress={() => router.back()}>
                 <Text className="text-base font-semibold text-slate-900">
                   Login
                 </Text>

@@ -411,7 +411,7 @@ export default function HomeScreen() {
           )}
         </ScrollView>
 
-        <View className="mx-5 mt-6 rounded-3xl border border-slate-200 bg-white p-5">
+        {/* <View className="mx-5 mt-6 rounded-3xl border border-slate-200 bg-white p-5">
           <Text className="text-[11px] tracking-[3px] text-slate-600">
             NOTE
           </Text>
@@ -421,7 +421,7 @@ export default function HomeScreen() {
           <Text className="mt-2 text-slate-600">
             Saved for your next visit.
           </Text>
-        </View>
+        </View> */}
       </ScrollView>
     </View>
   );

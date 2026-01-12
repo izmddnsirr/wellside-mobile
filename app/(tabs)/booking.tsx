@@ -238,6 +238,7 @@ export default function BookingScreen() {
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
         }
+        contentContainerStyle={{ paddingBottom: 32 }}
       >
         {/* Greeting Section */}
         <View className="mx-5 mt-3 flex-row justify-between items-center">
@@ -400,7 +401,7 @@ export default function BookingScreen() {
 
         <TouchableOpacity
           onPress={() => router.push("/booking/select-service")}
-          className="mx-5 mt-6 mb-10 bg-slate-900 rounded-full py-4 active:opacity-80"
+          className="mx-5 mt-5 mb-10 bg-slate-900 rounded-full py-4 active:opacity-80"
         >
           <Text className="text-center text-white font-semibold text-lg">
             Book appointment

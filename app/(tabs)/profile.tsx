@@ -1,7 +1,7 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -26,6 +26,7 @@ type HistoryItem = {
   id: string;
   startAt: string;
   endAt: string;
+  createdAt: string;
   serviceName: string;
   barberName: string;
   price: number | null;
@@ -106,10 +107,10 @@ export default function ProfileScreen() {
 
     const { data: bookingData, error: bookingError } = await supabase
       .from("bookings")
-      .select("id,start_at,end_at,service_id,barber_id,status")
+      .select("id,start_at,end_at,created_at,service_id,barber_id,status")
       .eq("customer_id", authData.user.id)
       .in("status", ["completed", "cancelled"])
-      .order("start_at", { ascending: false });
+      .order("created_at", { ascending: false });
 
     if (bookingError) {
       setHistory([]);
@@ -162,6 +163,7 @@ export default function ProfileScreen() {
         id: booking.id,
         startAt: booking.start_at,
         endAt: booking.end_at,
+        createdAt: booking.created_at,
         serviceName: service?.name ?? "Service",
         barberName: barberMap.get(booking.barber_id) ?? "Barber",
         price: service?.price ?? null,
@@ -223,6 +225,10 @@ export default function ProfileScreen() {
   const initials = `${profile?.first_name?.[0] ?? ""}${
     profile?.last_name?.[0] ?? ""
   }`.toUpperCase();
+  const completedVisits = useMemo(
+    () => history.filter((item) => item.status === "completed").length,
+    [history]
+  );
 
   return (
     <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top }}>
@@ -289,7 +295,7 @@ export default function ProfileScreen() {
             </Text>
             <View className="rounded-full border border-slate-200 bg-white px-3 py-1">
               <Text className="text-xs font-semibold text-slate-700">
-                {history.length} visits
+                {completedVisits} visits
               </Text>
             </View>
           </View>

@@ -1,13 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBooking } from "../../context/BookingContext";
 import { supabase } from "../../utils/supabase";
 
 type ServiceRow = {
   id: string;
+  service_code: string | null;
   name: string;
   price: number;
   duration_minutes: number;
@@ -20,39 +21,46 @@ export default function SelectServiceScreen() {
   const { setService } = useBooking();
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
+
+  const fetchServices = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    const { data, error } = await supabase
+      .from("services")
+      .select("id,service_code,name,price,duration_minutes,is_active")
+      .eq("is_active", true)
+      .order("service_code", { ascending: true })
+      .order("name", { ascending: true });
+
+    if (!isMountedRef.current) {
+      return;
+    }
+
+    if (error) {
+      setErrorMessage("Unable to load services right now.");
+      setServices([]);
+    } else {
+      setServices(data ?? []);
+    }
+    setIsLoading(false);
+  }, []);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchServices = async () => {
-      setIsLoading(true);
-      setErrorMessage(null);
-      const { data, error } = await supabase
-        .from("services")
-        .select("id,name,price,duration_minutes,is_active")
-        .eq("is_active", true)
-        .order("name");
-
-      if (!isMounted) {
-        return;
-      }
-
-      if (error) {
-        setErrorMessage("Unable to load services right now.");
-        setServices([]);
-      } else {
-        setServices(data ?? []);
-      }
-      setIsLoading(false);
-    };
-
     fetchServices();
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
     };
-  }, []);
+  }, [fetchServices]);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await fetchServices();
+    setIsRefreshing(false);
+  }, [fetchServices]);
 
   const groupedServices = useMemo(() => {
     return [
@@ -68,6 +76,9 @@ export default function SelectServiceScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        }
       >
         <View className="flex-row items-center justify-between px-5 pt-3">
           <Pressable
@@ -90,7 +101,7 @@ export default function SelectServiceScreen() {
         </View>
 
         <View className="px-5 pt-2">
-          <Text className="text-3xl font-semibold text-slate-900">Services</Text>
+          <Text className="text-3xl font-semibold text-slate-900">Select Services</Text>
           <Text className="mt-1 text-base text-slate-600">
             Choose your cut and finishing.
           </Text>
@@ -150,7 +161,7 @@ export default function SelectServiceScreen() {
                         });
                         router.push("/booking/select-professional");
                       }}
-                      className="h-12 w-12 items-center justify-center rounded-2xl bg-slate-900"
+                      className="h-12 w-12 items-center justify-center rounded-full bg-slate-900"
                     >
                       <Ionicons name="add" size={22} color="#ffffff" />
                     </Pressable>

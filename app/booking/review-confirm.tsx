@@ -288,7 +288,7 @@ export default function ReviewConfirmScreen() {
           <Pressable
             onPress={handleConfirm}
             disabled={!canConfirm || isSubmitting}
-            className={`rounded-full px-6 py-3 ${
+            className={`rounded-full px-8 py-4 mb-2 ${
               !canConfirm || isSubmitting
                 ? "bg-slate-200"
                 : "bg-slate-900"

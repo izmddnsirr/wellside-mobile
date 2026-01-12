@@ -117,14 +117,14 @@ export default function LoginScreen() {
               <Text className="text-3xl mt-1 font-semibold text-slate-900">
                 Welcome back.
               </Text>
-              <Text className="text-slate-600 text-base mt-1">
-                Sign in with phone number or Google
+              <Text className="text-slate-600 text-base mt-1 mb-6">
+                Sign in with email and password.
               </Text>
             </View>
 
             {/* Email */}
             <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
-              EMAIL
+              Email
             </Text>
             <TextInput
               className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
@@ -137,9 +137,16 @@ export default function LoginScreen() {
             />
 
             {/* Password */}
-            <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
-              PASSWORD
-            </Text>
+            <View className="mb-3 flex-row items-center justify-between">
+              <Text className="text-xs font-semibold text-slate-600 tracking-[0.2em]">
+                Password
+              </Text>
+              <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
+                <Text className="text-xs font-semibold text-slate-900">
+                  Forgot password?
+                </Text>
+              </Pressable>
+            </View>
             <TextInput
               className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
               placeholder="Enter your password"
@@ -166,6 +173,7 @@ export default function LoginScreen() {
                 {isSubmitting ? "Signing in..." : "Login"}
               </Text>
             </Pressable>
+
           </View>
 
           {/* Register Link */}

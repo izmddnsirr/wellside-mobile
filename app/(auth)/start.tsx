@@ -11,9 +11,6 @@ export default function StartScreen() {
       className="flex-1 bg-slate-50 px-5"
       style={{ paddingTop: insets.top }}
     >
-      <View className="absolute -top-24 -right-20 h-56 w-56 rounded-full bg-slate-200 opacity-70" />
-      <View className="absolute top-40 -left-16 h-40 w-40 rounded-full bg-slate-100 opacity-60" />
-
       {/* Hero */}
       <View className="mt-3">
         <Text className="text-3xl mt-1 font-semibold text-slate-900">
@@ -33,14 +30,14 @@ export default function StartScreen() {
       <View className="w-full mt-auto pb-6">
         <Pressable
           onPress={() => router.push("/(auth)/login")}
-          className="bg-slate-900 rounded-full py-5 mb-4 active:opacity-80"
+          className="bg-slate-900 rounded-full py-5 active:opacity-80" // mb-4
         >
           <Text className="text-center text-white font-semibold text-lg">
             Continue with Email
           </Text>
         </Pressable>
 
-        <Pressable className="bg-white rounded-full py-5 border border-slate-200 active:opacity-80">
+        {/* <Pressable className="bg-white rounded-full py-5 border border-slate-200 active:opacity-80">
           <View className="flex-row items-center justify-center">
             <View className="mr-3 flex-row items-center">
               <View className="h-2 w-2 rounded-full bg-blue-600" />
@@ -52,7 +49,7 @@ export default function StartScreen() {
               Continue with Google
             </Text>
           </View>
-        </Pressable>
+        </Pressable> */}
 
         <Text className="text-center text-xs text-slate-600 mt-5">
           By continuing, you agree to our Terms & Privacy Policy.
