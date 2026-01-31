@@ -65,8 +65,8 @@ export default function ReviewConfirmScreen() {
     ? `${selectedService.durationMinutes} min`
     : "Duration unavailable";
   const barberName = selectedBarber?.displayName ?? "Select professional";
-  const subtotal = selectedService?.price ?? 0;
-  const total = selectedService?.price ?? 0;
+  const subtotal = selectedService?.basePrice ?? 0;
+  const total = selectedService?.basePrice ?? 0;
   const canConfirm =
     !!selectedService && !!selectedBarber && !!selectedDate && !!selectedSlot;
 
@@ -108,32 +108,11 @@ export default function ReviewConfirmScreen() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from("bookings")
-      .insert({
-        customer_id: authData.user.id,
-        barber_id: selectedBarber.id,
-        service_id: selectedService.id,
-        start_at: selectedSlot.startAt,
-        end_at: selectedSlot.endAt,
-        status: "scheduled",
-      })
-      .select("id")
-      .single();
-
-    if (error || !data) {
-      console.error("Booking confirm failed:", error);
-      setIsSubmitting(false);
-      setErrorMessage(error?.message ?? "Unable to confirm booking right now.");
-      return;
-    }
-
     setIsSubmitting(false);
-    router.replace({
-      pathname: "/booking/success",
+    router.push({
+      pathname: "/booking/confirming",
       params: {
-        bookingId: data.id,
-        bookingCode: "",
+        startedAt: String(Date.now()),
       },
     });
   };
@@ -246,12 +225,8 @@ export default function ReviewConfirmScreen() {
                 <Text className="text-xs font-semibold text-slate-500 tracking-[0.2em]">
                   Summary
                 </Text>
+                
                 <View className="mt-3 flex-row items-center justify-between">
-                  <Text className="text-sm text-slate-600">Subtotal</Text>
-                  <Text className="text-sm text-slate-600">MYR {subtotal}</Text>
-                </View>
-                <View className="my-4 h-px bg-slate-200" />
-                <View className="flex-row items-center justify-between">
                   <Text className="text-lg font-semibold text-slate-900">
                     Total
                   </Text>
@@ -298,7 +273,7 @@ export default function ReviewConfirmScreen() {
               <ActivityIndicator color="#fff" />
             ) : (
               <Text className="text-base font-semibold text-white">
-                Confirm
+                Confirm Booking
               </Text>
             )}
           </Pressable>

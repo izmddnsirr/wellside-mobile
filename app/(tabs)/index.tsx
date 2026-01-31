@@ -30,6 +30,11 @@ const dayFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: TIME_ZONE,
   weekday: "long",
 });
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: TIME_ZONE,
+  month: "short",
+  day: "numeric",
+});
 const timeFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: TIME_ZONE,
   hour: "numeric",
@@ -153,7 +158,7 @@ export default function HomeScreen() {
     if (Number.isNaN(date.getTime())) {
       return "";
     }
-    return dayFormatter.format(date);
+    return `${dayFormatter.format(date)}, ${dateFormatter.format(date)}`;
   }, [upcoming]);
 
   const timeLabel = useMemo(() => {
@@ -222,8 +227,8 @@ export default function HomeScreen() {
             <>
               <View className="bg-slate-900 px-6 py-5">
                 <View className="flex-row items-center justify-between">
-                  <Text className="text-slate-200 text-[11px] tracking-[3px]">
-                    UPCOMING
+                  <Text className="text-slate-200 text-[11px] tracking-[0.2em]">
+                    Upcoming
                   </Text>
                   {upcoming ? (
                     <View
@@ -278,7 +283,7 @@ export default function HomeScreen() {
                           color="#64748b"
                         />
                         <Text className="ml-2 text-xs text-slate-500 tracking-[0.2em]">
-                          SERVICE
+                          Service
                         </Text>
                       </View>
                       <Text className="mt-1 text-base font-semibold text-slate-900">
@@ -293,7 +298,7 @@ export default function HomeScreen() {
                           color="#64748b"
                         />
                         <Text className="ml-2 text-xs text-slate-500 tracking-[0.2em] text-right">
-                          BARBER
+                          Barber
                         </Text>
                       </View>
                       <Text className="mt-1 text-base font-semibold text-slate-900 text-right">
@@ -340,8 +345,8 @@ export default function HomeScreen() {
           <View className="w-[31%] rounded-3xl bg-white border border-slate-200 p-4">
             <View className="flex-row items-center">
               <Ionicons name="time-outline" size={12} color="#64748b" />
-              <Text className="ml-2 text-[11px] tracking-[2px] text-slate-600">
-                NEXT
+              <Text className="ml-2 text-[11px] tracking-[0.2em] text-slate-600">
+                Next
               </Text>
             </View>
             <Text className="mt-2 text-base font-semibold text-slate-900">
@@ -351,26 +356,14 @@ export default function HomeScreen() {
               {upcoming ? dayLabel : "Book now"}
             </Text>
           </View>
-          <View className="w-[31%] rounded-3xl bg-white border border-slate-200 p-4">
-            <View className="flex-row items-center">
-              <Ionicons name="receipt-outline" size={12} color="#64748b" />
-              <Text className="ml-2 text-[11px] tracking-[2px] text-slate-600">
-                TOTAL
-              </Text>
-            </View>
-            <Text className="mt-2 text-base font-semibold text-slate-900">
-              {totalBookings}
-            </Text>
-            <Text className="mt-1 text-xs text-slate-500">Bookings</Text>
-          </View>
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/ai")}
             className="w-[31%] rounded-3xl bg-slate-900 border border-slate-900 p-4"
           >
             <View className="flex-row items-center">
               <Ionicons name="sparkles-outline" size={12} color="#e2e8f0" />
-              <Text className="ml-2 text-[11px] tracking-[2px] text-slate-200">
-                TRY AI
+              <Text className="ml-2 text-[11px] tracking-[0.2em] text-slate-200">
+                Try AI
               </Text>
             </View>
             <Text className="mt-2 text-base font-semibold text-white">
@@ -378,9 +371,21 @@ export default function HomeScreen() {
             </Text>
             <Text className="mt-1 text-xs text-slate-300">New look</Text>
           </TouchableOpacity>
+          <View className="w-[31%] rounded-3xl bg-white border border-slate-200 p-4">
+            <View className="flex-row items-center">
+              <Ionicons name="receipt-outline" size={12} color="#64748b" />
+              <Text className="ml-2 text-[11px] tracking-[0.2em] text-slate-600">
+                Total
+              </Text>
+            </View>
+            <Text className="mt-2 text-base font-semibold text-slate-900">
+              {totalBookings}
+            </Text>
+            <Text className="mt-1 text-xs text-slate-500">Bookings</Text>
+          </View>
         </View>
 
-        <Text className="mx-5 mt-6 text-[11px] tracking-[4px] text-slate-600 font-semibold">
+        {/* <Text className="mx-5 mt-6 text-[11px] tracking-[0.2em] text-slate-600 font-semibold">
           Gallery
         </Text>
         <ScrollView
@@ -409,19 +414,7 @@ export default function HomeScreen() {
               />
             )
           )}
-        </ScrollView>
-
-        {/* <View className="mx-5 mt-6 rounded-3xl border border-slate-200 bg-white p-5">
-          <Text className="text-[11px] tracking-[3px] text-slate-600">
-            NOTE
-          </Text>
-          <Text className="mt-2 text-lg font-semibold text-slate-900">
-            Keep neckline low, matte finish.
-          </Text>
-          <Text className="mt-2 text-slate-600">
-            Saved for your next visit.
-          </Text>
-        </View> */}
+        </ScrollView> */}
       </ScrollView>
     </View>
   );

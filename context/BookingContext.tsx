@@ -3,7 +3,7 @@ import { createContext, useContext, useMemo, useState } from "react";
 export type ServiceSelection = {
   id: string;
   name: string;
-  price: number;
+  basePrice: number | null;
   durationMinutes: number;
 };
 

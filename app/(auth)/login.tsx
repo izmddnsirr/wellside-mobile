@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -19,6 +20,7 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -147,15 +149,33 @@ export default function LoginScreen() {
                 </Text>
               </Pressable>
             </View>
-            <TextInput
-              className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
-              placeholder="Enter your password"
-              keyboardType="default"
-              secureTextEntry
-              autoCapitalize="none"
-              value={password}
-              onChangeText={setPassword}
-            />
+            <View className="relative mb-6">
+              <TextInput
+                className="bg-white border border-slate-200 rounded-3xl p-5 pr-12 text-base leading-5 text-slate-900"
+                placeholder="Enter your password"
+                keyboardType="default"
+                secureTextEntry={!isPasswordVisible}
+                autoCapitalize="none"
+                value={password}
+                onChangeText={setPassword}
+              />
+              <Pressable
+                onPress={() => setIsPasswordVisible((value) => !value)}
+                style={{
+                  position: "absolute",
+                  right: 18,
+                  top: "50%",
+                  marginTop: -11,
+                }}
+                hitSlop={10}
+              >
+                <Ionicons
+                  name={isPasswordVisible ? "eye-off-outline" : "eye-outline"}
+                  size={22}
+                  color="#0f172a"
+                />
+              </Pressable>
+            </View>
 
             {errorMessage ? (
               <Text className="text-sm text-red-600 mb-4">{errorMessage}</Text>

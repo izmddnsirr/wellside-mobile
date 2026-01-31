@@ -26,6 +26,11 @@ const dayFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: TIME_ZONE,
   weekday: "long",
 });
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: TIME_ZONE,
+  month: "short",
+  day: "numeric",
+});
 const timeFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: TIME_ZONE,
   hour: "numeric",
@@ -38,7 +43,7 @@ type UpcomingBooking = {
   endAt: string;
   serviceName: string;
   durationMinutes: number | null;
-  price: number | null;
+  basePrice: number | null;
   barberName: string;
   barberPhone: string | null;
   status: "scheduled" | "in_progress";
@@ -86,7 +91,7 @@ export default function BookingScreen() {
     const [{ data: serviceData }, { data: barberData }] = await Promise.all([
       supabase
         .from("services")
-        .select("name,price,duration_minutes")
+        .select("name,base_price,duration_minutes")
         .eq("id", bookingData.service_id)
         .maybeSingle(),
       supabase
@@ -110,7 +115,7 @@ export default function BookingScreen() {
       endAt: bookingData.end_at,
       serviceName: serviceData?.name ?? "Service",
       durationMinutes: serviceData?.duration_minutes ?? null,
-      price: serviceData?.price ?? null,
+      basePrice: serviceData?.base_price ?? null,
       barberName,
       barberPhone: barberData?.phone ?? null,
       status: bookingData.status,
@@ -186,7 +191,9 @@ export default function BookingScreen() {
     if (Number.isNaN(start.getTime())) {
       return "";
     }
-    return dayFormatter.format(start).toUpperCase();
+    return `${dayFormatter.format(start)}, ${dateFormatter
+      .format(start)
+      .toUpperCase()}`.toUpperCase();
   }, [upcoming]);
 
   const openWhatsApp = useCallback(async (message: string) => {
@@ -255,7 +262,7 @@ export default function BookingScreen() {
         {/* Upcoming */}
         <View className="mx-5 mt-6">
           <View className="flex-row items-center justify-between">
-            <Text className="text-xs font-semibold tracking-[0.25em] text-slate-500">
+            <Text className="text-xs font-semibold tracking-[0.2em] text-slate-500">
               Upcoming
             </Text>
             {upcoming ? (
@@ -305,7 +312,7 @@ export default function BookingScreen() {
                 <View className="bg-slate-900 px-5 py-5">
                   <View className="flex-row items-start justify-between">
                     <View style={{ flex: 1, paddingRight: 12 }}>
-                      <Text className="text-slate-300 text-xs tracking-[0.3em]">
+                      <Text className="text-slate-300 text-xs tracking-[0.2em]">
                         {dayLabel}
                       </Text>
                       <Text className="text-white text-2xl font-semibold mt-2">
@@ -327,7 +334,7 @@ export default function BookingScreen() {
                         <Ionicons name="time-outline" size={16} color="#0f172a" />
                       </View>
                       <View className="ml-3">
-                        <Text className="text-xs text-slate-500 tracking-[0.2em]">DURATION</Text>
+                        <Text className="text-xs text-slate-500 tracking-[0.2em]">Duration</Text>
                         <Text className="text-sm font-semibold text-slate-900">
                           {upcoming.durationMinutes
                             ? `${upcoming.durationMinutes} min`
@@ -340,9 +347,9 @@ export default function BookingScreen() {
                         <Ionicons name="cash-outline" size={16} color="#0f172a" />
                       </View>
                       <View className="ml-3">
-                        <Text className="text-xs text-slate-500 tracking-[0.2em]">TOTAL</Text>
+                        <Text className="text-xs text-slate-500 tracking-[0.2em]">Total</Text>
                         <Text className="text-sm font-semibold text-slate-900">
-                          {upcoming.price ? `RM${upcoming.price}` : "RM0"}
+                          {upcoming.basePrice ? `RM${upcoming.basePrice}` : "RM0"}
                         </Text>
                       </View>
                     </View>

@@ -10,7 +10,7 @@ type ServiceRow = {
   id: string;
   service_code: string | null;
   name: string;
-  price: number;
+  base_price: number | null;
   duration_minutes: number;
   is_active: boolean;
 };
@@ -30,8 +30,9 @@ export default function SelectServiceScreen() {
     setErrorMessage(null);
     const { data, error } = await supabase
       .from("services")
-      .select("id,service_code,name,price,duration_minutes,is_active")
+      .select("id,service_code,name,base_price,duration_minutes,is_active")
       .eq("is_active", true)
+      .not("base_price", "is", null)
       .order("service_code", { ascending: true })
       .order("name", { ascending: true });
 
@@ -146,7 +147,7 @@ export default function SelectServiceScreen() {
                         </View>
                         <View className="ml-2 rounded-full bg-slate-900 px-3 py-1">
                           <Text className="text-xs font-semibold text-white">
-                            MYR {service.price}
+                            MYR {service.base_price ?? 0}
                           </Text>
                         </View>
                       </View>
@@ -156,7 +157,7 @@ export default function SelectServiceScreen() {
                         setService({
                           id: service.id,
                           name: service.name,
-                          price: service.price,
+                          basePrice: service.base_price,
                           durationMinutes: service.duration_minutes,
                         });
                         router.push("/booking/select-professional");

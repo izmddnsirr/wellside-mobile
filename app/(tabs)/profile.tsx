@@ -29,8 +29,8 @@ type HistoryItem = {
   createdAt: string;
   serviceName: string;
   barberName: string;
-  price: number | null;
-  status: "completed" | "cancelled";
+  basePrice: number | null;
+  status: "completed" | "cancelled" | "no_show";
 };
 
 const TIME_ZONE = "Asia/Kuala_Lumpur";
@@ -109,7 +109,7 @@ export default function ProfileScreen() {
       .from("bookings")
       .select("id,start_at,end_at,created_at,service_id,barber_id,status")
       .eq("customer_id", authData.user.id)
-      .in("status", ["completed", "cancelled"])
+      .in("status", ["completed", "cancelled", "no_show"])
       .order("created_at", { ascending: false });
 
     if (bookingError) {
@@ -130,7 +130,7 @@ export default function ProfileScreen() {
       serviceIds.length
         ? supabase
             .from("services")
-            .select("id,name,price")
+            .select("id,name,base_price")
             .in("id", serviceIds)
         : Promise.resolve({ data: [] }),
       barberIds.length
@@ -166,7 +166,7 @@ export default function ProfileScreen() {
         createdAt: booking.created_at,
         serviceName: service?.name ?? "Service",
         barberName: barberMap.get(booking.barber_id) ?? "Barber",
-        price: service?.price ?? null,
+        basePrice: service?.base_price ?? null,
         status: booking.status,
       };
     });
@@ -290,7 +290,7 @@ export default function ProfileScreen() {
         {/* History */}
         <View className="mx-5 mt-6">
           <View className="flex-row items-center justify-between">
-            <Text className="text-xs font-semibold tracking-[0.25em] text-slate-500">
+            <Text className="text-xs font-semibold tracking-[0.2em] text-slate-500">
               Booking History
             </Text>
             <View className="rounded-full border border-slate-200 bg-white px-3 py-1">
@@ -307,7 +307,7 @@ export default function ProfileScreen() {
                   Recent visits
                 </Text>
                 <Text className="text-slate-300 text-sm mt-1">
-                  Track completed and cancelled appointments
+                  Track your appointments history
                 </Text>
               </View>
               <View className="h-10 w-10 rounded-full bg-white/10 items-center justify-center">
@@ -374,17 +374,21 @@ export default function ProfileScreen() {
                             className={`rounded-full px-3 py-1 ${
                               item.status === "cancelled"
                                 ? "bg-rose-100"
-                                : "bg-emerald-100"
+                                : item.status === "no_show"
+                                  ? "bg-purple-100"
+                                  : "bg-emerald-100"
                             }`}
                           >
                             <Text
                               className={`text-xs font-semibold ${
                                 item.status === "cancelled"
                                   ? "text-rose-700"
-                                  : "text-emerald-700"
+                                  : item.status === "no_show"
+                                    ? "text-purple-700"
+                                    : "text-emerald-700"
                               }`}
                             >
-                              {item.status.toUpperCase()}
+                              {item.status.replace("_", " ").toUpperCase()}
                             </Text>
                           </View>
                         </View>
@@ -396,7 +400,7 @@ export default function ProfileScreen() {
                             {item.barberName}
                           </Text>
                           <Text className="text-sm font-semibold text-slate-900">
-                            {item.price ? `RM${item.price}` : "RM0"}
+                            {item.basePrice ? `RM${item.basePrice}` : "RM0"}
                           </Text>
                         </View>
                       </View>

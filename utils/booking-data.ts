@@ -2,25 +2,25 @@ export const SERVICES = [
   {
     id: "svc-signature-cut",
     name: "Signature Cut",
-    price: 45,
+    basePrice: 45,
     durationMinutes: 45,
   },
   {
     id: "svc-skin-fade",
     name: "Skin Fade",
-    price: 55,
+    basePrice: 55,
     durationMinutes: 50,
   },
   {
     id: "svc-beard-lineup",
     name: "Beard Line-Up",
-    price: 35,
+    basePrice: 35,
     durationMinutes: 30,
   },
   {
     id: "svc-cut-shave",
     name: "Cut + Hot Towel Shave",
-    price: 75,
+    basePrice: 75,
     durationMinutes: 75,
   },
 ];

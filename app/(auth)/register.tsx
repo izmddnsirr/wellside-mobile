@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -19,6 +20,9 @@ export default function RegisterScreen() {
 
   const { email, password, setEmail, setPassword } = useOnboarding();
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
+    useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const onRegister = () => {
@@ -94,27 +98,67 @@ export default function RegisterScreen() {
             <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
               Password
             </Text>
-            <TextInput
-              className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
-              placeholder="Enter your password"
-              secureTextEntry
-              autoCapitalize="none"
-              value={password}
-              onChangeText={(value) => setPassword(value)}
-            />
+            <View className="relative mb-6">
+              <TextInput
+                className="bg-white border border-slate-200 rounded-3xl p-5 pr-12 text-base leading-5 text-slate-900"
+                placeholder="Enter your password"
+                secureTextEntry={!isPasswordVisible}
+                autoCapitalize="none"
+                value={password}
+                onChangeText={(value) => setPassword(value)}
+              />
+              <Pressable
+                onPress={() => setIsPasswordVisible((value) => !value)}
+                style={{
+                  position: "absolute",
+                  right: 18,
+                  top: "50%",
+                  marginTop: -11,
+                }}
+                hitSlop={10}
+              >
+                <Ionicons
+                  name={isPasswordVisible ? "eye-off-outline" : "eye-outline"}
+                  size={22}
+                  color="#0f172a"
+                />
+              </Pressable>
+            </View>
 
             {/* CONFIRM PASSWORD */}
             <Text className="text-xs font-semibold text-slate-600 mb-3 tracking-[0.2em]">
               Confirm Password
             </Text>
-            <TextInput
-              className="bg-white border border-slate-200 rounded-3xl p-5 text-base leading-5 mb-6 text-slate-900"
-              placeholder="Confirm your password"
-              secureTextEntry
-              autoCapitalize="none"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-            />
+            <View className="relative mb-6">
+              <TextInput
+                className="bg-white border border-slate-200 rounded-3xl p-5 pr-12 text-base leading-5 text-slate-900"
+                placeholder="Confirm your password"
+                secureTextEntry={!isConfirmPasswordVisible}
+                autoCapitalize="none"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+              />
+              <Pressable
+                onPress={() =>
+                  setIsConfirmPasswordVisible((value) => !value)
+                }
+                style={{
+                  position: "absolute",
+                  right: 18,
+                  top: "50%",
+                  marginTop: -11,
+                }}
+                hitSlop={10}
+              >
+                <Ionicons
+                  name={
+                    isConfirmPasswordVisible ? "eye-off-outline" : "eye-outline"
+                  }
+                  size={22}
+                  color="#0f172a"
+                />
+              </Pressable>
+            </View>
 
             {errorMessage ? (
               <Text className="text-sm text-red-600 mb-4">{errorMessage}</Text>
