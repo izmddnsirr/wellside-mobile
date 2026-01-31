@@ -199,7 +199,7 @@ export default function LoginScreen() {
           {/* Register Link */}
           <View className="flex-row justify-center">
             <Text className="text-base text-slate-600">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
             </Text>
             <Pressable onPress={() => router.push("/(auth)/register")}>
               <Text className="text-base font-semibold text-slate-900">

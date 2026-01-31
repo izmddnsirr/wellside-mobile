@@ -45,15 +45,6 @@ const timeFormatter = new Intl.DateTimeFormat("en-US", {
   hour: "numeric",
   minute: "2-digit",
 });
-const dayFormatter = new Intl.DateTimeFormat("en-US", {
-  timeZone: TIME_ZONE,
-  day: "2-digit",
-});
-const monthFormatter = new Intl.DateTimeFormat("en-US", {
-  timeZone: TIME_ZONE,
-  month: "short",
-});
-
 export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -192,7 +183,7 @@ export default function ProfileScreen() {
       return () => {
         isMounted = false;
       };
-    }, [fetchProfile])
+    }, [fetchProfile, fetchHistory])
   );
 
   const onRefresh = useCallback(async () => {
@@ -352,13 +343,6 @@ export default function ProfileScreen() {
                         : `${timeFormatter.format(
                             startDate
                           )} - ${timeFormatter.format(endDate)}`;
-                    const dayLabel = Number.isNaN(startDate.getTime())
-                      ? "--"
-                      : dayFormatter.format(startDate);
-                    const monthLabel = Number.isNaN(startDate.getTime())
-                      ? "--"
-                      : monthFormatter.format(startDate).toUpperCase();
-
                     return (
                       <View
                         key={item.id}

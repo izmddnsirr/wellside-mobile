@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   AppState,
   Animated,
+  Platform,
   Pressable,
   Text,
   View,
@@ -14,6 +15,19 @@ import { useBooking } from "../../context/BookingContext";
 import { supabase } from "../../utils/supabase";
 
 const GRACE_PERIOD_MS = 10000;
+const TIME_ZONE = "Asia/Kuala_Lumpur";
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: TIME_ZONE,
+  weekday: "short",
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+const timeFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: TIME_ZONE,
+  hour: "numeric",
+  minute: "2-digit",
+});
 
 type Phase =
   | "counting"
@@ -28,7 +42,8 @@ export default function ConfirmingBookingScreen() {
   const { startedAt: startedAtParam } = useLocalSearchParams<{
     startedAt?: string;
   }>();
-  const { selectedService, selectedBarber, selectedSlot } = useBooking();
+  const { selectedService, selectedBarber, selectedSlot, selectedDate } =
+    useBooking();
   const [phase, setPhase] = useState<Phase>("counting");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
@@ -45,10 +60,9 @@ export default function ConfirmingBookingScreen() {
 
   const elapsed = Math.max(0, now - startedAt);
   const remaining = Math.max(0, GRACE_PERIOD_MS - elapsed);
-  const progress = Math.min(1, elapsed / GRACE_PERIOD_MS);
   const secondsLeft = Math.ceil(remaining / 1000);
 
-  const syncProgressAnimation = () => {
+  const syncProgressAnimation = useCallback(() => {
     const elapsedNow = Math.max(0, Date.now() - startedAt);
     const remainingNow = Math.max(0, GRACE_PERIOD_MS - elapsedNow);
     const progressNow = Math.min(1, elapsedNow / GRACE_PERIOD_MS);
@@ -60,14 +74,14 @@ export default function ConfirmingBookingScreen() {
     });
     animation.start();
     return () => animation.stop();
-  };
+  }, [progressAnim, startedAt]);
 
   useEffect(() => {
     if (phase !== "counting") {
       return;
     }
     return syncProgressAnimation();
-  }, [phase, startedAt]);
+  }, [phase, startedAt, syncProgressAnimation]);
 
   useEffect(() => {
     if (phase !== "counting") {
@@ -89,7 +103,7 @@ export default function ConfirmingBookingScreen() {
       }
     });
     return () => subscription.remove();
-  }, [phase, startedAt]);
+  }, [phase, startedAt, syncProgressAnimation]);
 
   useEffect(() => {
     if (phase !== "counting") {
@@ -98,7 +112,7 @@ export default function ConfirmingBookingScreen() {
     if (elapsed >= GRACE_PERIOD_MS) {
       void finalizeBooking();
     }
-  }, [elapsed, phase]);
+  }, [elapsed, phase, finalizeBooking]);
 
   useEffect(() => {
     if (!selectedService || !selectedBarber || !selectedSlot) {
@@ -107,7 +121,105 @@ export default function ConfirmingBookingScreen() {
     }
   }, [selectedService, selectedBarber, selectedSlot]);
 
-  const finalizeBooking = async () => {
+  const sendBookingEmail = useCallback(
+    async ({
+      bookingId,
+      bookingRef,
+      customerId,
+      customerEmail,
+    }: {
+      bookingId: string;
+      bookingRef: string | null;
+      customerId: string;
+      customerEmail: string | null;
+    }) => {
+      if (
+        !selectedService ||
+        !selectedBarber ||
+        !selectedSlot ||
+        !selectedDate
+      ) {
+        return;
+      }
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("first_name,last_name,email,phone")
+        .eq("id", customerId)
+        .maybeSingle();
+
+      const firstName = profileData?.first_name?.trim();
+      const lastName = profileData?.last_name?.trim();
+      const customerName =
+        [firstName, lastName].filter(Boolean).join(" ").trim() || "there";
+      const email =
+        profileData?.email?.trim() || customerEmail?.trim() || "";
+      const customerPhone = profileData?.phone?.trim() || null;
+
+      if (!email) {
+        return;
+      }
+
+      const startAt = new Date(selectedSlot.startAt);
+      const bookingDate = dateFormatter.format(startAt);
+      const bookingTime = timeFormatter.format(startAt);
+      const totalPrice = `MYR ${selectedService.basePrice ?? 0}`;
+
+      const localBase = process.env.EXPO_PUBLIC_BASE_URL_LOCAL ?? "";
+      const hostedBase = process.env.EXPO_PUBLIC_BASE_URL ?? "";
+      const apiBase =
+        Platform.OS === "web"
+          ? ""
+          : __DEV__ && localBase
+          ? localBase
+          : hostedBase;
+      if (!apiBase && Platform.OS !== "web") {
+        console.warn("Booking email skipped: EXPO_PUBLIC_BASE_URL missing.");
+        return;
+      }
+
+      const payload = {
+        email,
+        customerName,
+        bookingId,
+        bookingRef: bookingRef ?? undefined,
+        services: selectedService.name,
+        barberName: selectedBarber.displayName,
+        bookingDate,
+        bookingTime,
+        totalPrice,
+        status: "Confirmed",
+        customerPhone,
+        event: "confirmation" as const,
+      };
+
+      try {
+        await Promise.all([
+          fetch(`${apiBase}/api/booking-email`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...payload,
+              audience: "customer",
+            }),
+          }),
+          fetch(`${apiBase}/api/booking-email`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...payload,
+              audience: "admin",
+            }),
+          }),
+        ]);
+      } catch (emailError) {
+        console.warn("Booking email request failed:", emailError);
+      }
+    },
+    [selectedBarber, selectedDate, selectedService, selectedSlot]
+  );
+
+  const finalizeBooking = useCallback(async () => {
     if (finalizeRequestedRef.current || phase !== "counting") {
       return;
     }
@@ -163,7 +275,7 @@ export default function ConfirmingBookingScreen() {
         end_at: selectedSlot.endAt,
         status: "scheduled",
       })
-      .select("id")
+      .select("id,booking_ref")
       .single();
 
     if (error || !data) {
@@ -174,15 +286,29 @@ export default function ConfirmingBookingScreen() {
       return;
     }
 
+    void sendBookingEmail({
+      bookingId: data.id,
+      bookingRef: data.booking_ref ?? null,
+      customerId: authData.user.id,
+      customerEmail: authData.user.email ?? null,
+    });
+
     setPhase("confirmed");
     router.replace({
       pathname: "/booking/success",
       params: {
         bookingId: data.id,
-        bookingCode: "",
+        bookingCode: data.booking_ref ?? "",
       },
     });
-  };
+  }, [
+    phase,
+    router,
+    selectedBarber,
+    selectedService,
+    selectedSlot,
+    sendBookingEmail,
+  ]);
 
   const handleCancel = () => {
     if (phase !== "counting") {

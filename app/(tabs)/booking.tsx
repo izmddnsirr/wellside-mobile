@@ -39,6 +39,7 @@ const timeFormatter = new Intl.DateTimeFormat("en-US", {
 
 type UpcomingBooking = {
   id: string;
+  bookingRef: string | null;
   startAt: string;
   endAt: string;
   serviceName: string;
@@ -72,7 +73,7 @@ export default function BookingScreen() {
 
     const { data: bookingData, error: bookingError } = await supabase
       .from("bookings")
-      .select("id,start_at,end_at,status,service_id,barber_id")
+      .select("id,booking_ref,start_at,end_at,status,service_id,barber_id")
       .eq("customer_id", authData.user.id)
       .in("status", ["scheduled", "in_progress"])
       .order("start_at", { ascending: true })
@@ -111,6 +112,7 @@ export default function BookingScreen() {
 
     setUpcoming({
       id: bookingData.id,
+      bookingRef: bookingData.booking_ref ?? null,
       startAt: bookingData.start_at,
       endAt: bookingData.end_at,
       serviceName: serviceData?.name ?? "Service",
@@ -139,6 +141,90 @@ export default function BookingScreen() {
     setIsRefreshing(false);
   }, [fetchUpcoming]);
 
+  const sendCancellationEmail = useCallback(
+    async (booking: UpcomingBooking) => {
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
+      if (authError || !authData.user) {
+        return;
+      }
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("first_name,last_name,email,phone")
+        .eq("id", authData.user.id)
+        .maybeSingle();
+
+      const firstName = profileData?.first_name?.trim();
+      const lastName = profileData?.last_name?.trim();
+      const customerName =
+        [firstName, lastName].filter(Boolean).join(" ").trim() || "there";
+      const email = profileData?.email?.trim() || authData.user.email?.trim();
+
+      if (!email) {
+        return;
+      }
+
+      const startAt = new Date(booking.startAt);
+      const bookingDate = dateFormatter.format(startAt);
+      const bookingTime = timeFormatter.format(startAt);
+      const totalPrice = `MYR ${booking.basePrice ?? 0}`;
+      const customerPhone = profileData?.phone?.trim() || null;
+
+      const localBase = process.env.EXPO_PUBLIC_BASE_URL_LOCAL ?? "";
+      const hostedBase = process.env.EXPO_PUBLIC_BASE_URL ?? "";
+      const apiBase =
+        Platform.OS === "web"
+          ? ""
+          : __DEV__ && localBase
+          ? localBase
+          : hostedBase;
+      if (!apiBase && Platform.OS !== "web") {
+        console.warn("Booking email skipped: EXPO_PUBLIC_BASE_URL missing.");
+        return;
+      }
+
+      const payload = {
+        email,
+        customerName,
+        bookingId: booking.id,
+        bookingRef: booking.bookingRef ?? undefined,
+        services: booking.serviceName,
+        barberName: booking.barberName,
+        bookingDate,
+        bookingTime,
+        totalPrice,
+        status: "Cancelled",
+        customerPhone,
+        event: "cancellation" as const,
+      };
+
+      try {
+        await Promise.all([
+          fetch(`${apiBase}/api/booking-email`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...payload,
+              audience: "customer",
+            }),
+          }),
+          fetch(`${apiBase}/api/booking-email`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...payload,
+              audience: "admin",
+            }),
+          }),
+        ]);
+      } catch (emailError) {
+        console.warn("Booking cancellation email failed:", emailError);
+      }
+    },
+    []
+  );
+
   const onCancelBooking = useCallback(() => {
     if (!upcoming || isCancelling) {
       return;
@@ -152,9 +238,13 @@ export default function BookingScreen() {
           text: "Cancel booking",
           style: "destructive",
           onPress: async () => {
+            const bookingSnapshot = upcoming;
+            if (!bookingSnapshot) {
+              return;
+            }
             setIsCancelling(true);
             const { error } = await supabase.rpc("cancel_booking", {
-              p_booking_id: upcoming.id,
+              p_booking_id: bookingSnapshot.id,
             });
 
             if (error) {
@@ -164,12 +254,13 @@ export default function BookingScreen() {
             }
 
             setIsCancelling(false);
+            await sendCancellationEmail(bookingSnapshot);
             await fetchUpcoming();
           },
         },
       ]
     );
-  }, [fetchUpcoming, isCancelling, upcoming]);
+  }, [fetchUpcoming, isCancelling, sendCancellationEmail, upcoming]);
 
   const timeLabel = useMemo(() => {
     if (!upcoming) {

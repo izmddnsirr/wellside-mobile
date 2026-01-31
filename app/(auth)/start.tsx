@@ -1,4 +1,4 @@
-import { AntDesign, Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Image, ImageBackground, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -6,10 +6,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function StartScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-
-  const onGoogleLogin = () => {
-    console.log("onGoogleLogin");
-  };
 
   const onEmailContinue = () => {
     router.push("/(auth)/login");

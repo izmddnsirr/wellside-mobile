@@ -179,7 +179,7 @@ export default function SelectTimeScreen() {
       if (isMountedRef.current) {
         setTimeSlots(slots);
       }
-    } catch (error) {
+    } catch {
       if (isMountedRef.current) {
         setSlotError("Unable to load available slots right now.");
         setTimeSlots([]);
@@ -237,7 +237,7 @@ export default function SelectTimeScreen() {
         date: fallbackDate.date,
       });
     }
-  }, [selectedDate, setDate]);
+  }, [dateOptions, selectedDate, setDate]);
 
   return (
     <View className="flex-1 bg-slate-50" style={{ paddingTop: insets.top }}>
