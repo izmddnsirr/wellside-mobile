@@ -85,7 +85,7 @@ export async function POST(request: Request) {
   let body: BookingEmailRequest;
   try {
     body = (await request.json()) as BookingEmailRequest;
-  } catch (_error) {
+  } catch {
     return json(400, { error: "Invalid JSON body." });
   }
 
